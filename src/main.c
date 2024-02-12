@@ -13,12 +13,14 @@
 int main(int argc, char** argv) {
   App app;
   char running = 1;
+  int i;
   SDL_DisplayMode dm;
   SDL_Event event;
   SDL_Rect caret_rect;
+  SDL_Rect editor_rect;
 
-  (void)argc;
-  (void)argv;
+  (void) argc;
+  (void) argv;
 
 #ifdef _WIN32
   {
@@ -102,9 +104,15 @@ int main(int argc, char** argv) {
               break;
             }
             case SDLK_UP: {
+              int q = editor_len_until_prev_line(editor, editor->caret_pos);
+              editor->caret_pos -= q;
+              editor->caret_pos -= 2;
+              editor->caret_pos -= editor_len_until_prev_line(editor, editor->caret_pos);
+              editor->caret_pos += q;
               break;
             }
             case SDLK_DOWN: {
+              editor->caret_pos += editor_len_until_next_line(editor, editor->caret_pos) + editor_len_until_prev_line(editor, editor->caret_pos) + 1;
               break;
             }
             case SDLK_BACKSPACE: {
@@ -127,8 +135,11 @@ int main(int argc, char** argv) {
           break;
         }
         case SDL_TEXTINPUT: {
-          editor_insert_at(editor, *event.text.text, editor->caret_pos);
-          ++editor->caret_pos;
+          /* FIX: can only deal with ascii */
+          if (*event.text.text != *"ö") {
+            editor_insert_at(editor, *event.text.text, editor->caret_pos);
+            ++editor->caret_pos;
+          }
           break;
         }
         case SDL_WINDOWEVENT: {
@@ -150,15 +161,18 @@ int main(int argc, char** argv) {
         }
       }
     }
-    SDL_Delay(1000 / 30);
+    editor_rect.x = app.margin_x;
+    editor_rect.y = app.margin_y + app.line_offset;
+    editor_rect.w = app.win_width - app.margin_x * 2;
+    editor_rect.h = app.win_height - (app.margin_y + app.line_offset) * 2;
+    SDL_Delay(1000 / 60);
     SDL_SetRenderDrawColor(app.renderer, 20, 20, 20, 255);
     SDL_RenderClear(app.renderer);
     SDL_SetRenderDrawColor(app.renderer, 200, 200, 200, 255);
+    SDL_RenderSetClipRect(app.renderer, &editor_rect);
     if (app.editors.first != NULL) {
       // SDL_SetWindowTitle(app.win, editor->title);
-      int i;
-
-      for (i = 0; i < 32; ++i)
+      for (i = 0; i < editor_rect.h / (app.line_offset + app.code_font->baseline) + 1; ++i)
         editor_render_line(editor, i, app.margin_x, app.margin_y + app.code_font->baseline * (i + 1) + app.line_offset * (i + 1), app.renderer, app.code_font);
 
       /* Create a caret */
@@ -172,10 +186,12 @@ int main(int argc, char** argv) {
       SDL_SetWindowTitle(app.win, "MOP");
       render_text(app.renderer, app.code_font, app.margin_x, app.code_font->baseline + app.margin_y, "No open editors.");
     }
+    SDL_RenderSetClipRect(app.renderer, NULL);
     SDL_RenderPresent(app.renderer);
   }
 
-  free(((Editor*)(ll_list_get(app.editors, 0)))->text);
+  for (i = 0; i < (int)(app.editors.len); ++i)
+    free(((Editor*)(ll_list_get(app.editors, i)))->text);
 
   ll_list_free(&app.editors);
 

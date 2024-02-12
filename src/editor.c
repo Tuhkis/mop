@@ -27,6 +27,7 @@ void editor_render_line(Editor* editor, int line, int x, int y, SDL_Renderer* re
     if (editor->text[line_end] == '\0') break;
     ++line_end;
   }
+  if (begin > BUFFSIZE || line_end > BUFFSIZE) return;
   editor->text[line_end] = '\0';
 
   render_text(renderer, font, x, y, editor->text + begin);
@@ -45,6 +46,13 @@ int editor_newlines_before(Editor* editor, int pos) {
 int editor_len_until_prev_line(Editor* editor, int pos) {
   int c = 0;
   while (editor->text[pos - 1 - c] != '\n' && editor->text != editor->text + (pos - c))
+    ++c;
+  return c;
+}
+
+int editor_len_until_next_line(Editor* editor, int pos) {
+  int c = 0;
+  while (editor->text[pos + c] != '\n')
     ++c;
   return c;
 }
