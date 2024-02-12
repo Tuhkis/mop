@@ -5,6 +5,11 @@
 #include "editor.h"
 #include "font.h"
 
+#ifdef _WIN32
+  #define WIN32_LEAN_AND_MEAN
+  #include "Windows.h"
+#endif /* _WIN32 */
+
 int main(int argc, char** argv) {
   App app;
   char running = 1;
@@ -69,9 +74,11 @@ int main(int argc, char** argv) {
       fclose(f);
       return -1;
     }
-    fread(editor->text, BUFFSIZE, 1, f);
+    fread(editor->text, editor->size, 1, f);
     fclose(f);
     ll_list_add(&app.editors, editor);
+  } else {
+    ll_list_add(&app.editors, create_editor("Unnamed"));
   }
 
   for (;running;) {
@@ -116,6 +123,7 @@ int main(int argc, char** argv) {
             }
           }
           if (editor->caret_pos < 0) editor->caret_pos = 0;
+          if (editor->text[editor->caret_pos + 1] == '\0') --editor->caret_pos;
           break;
         }
         case SDL_TEXTINPUT: {
@@ -147,7 +155,7 @@ int main(int argc, char** argv) {
     SDL_RenderClear(app.renderer);
     SDL_SetRenderDrawColor(app.renderer, 200, 200, 200, 255);
     if (app.editors.first != NULL) {
-      SDL_SetWindowTitle(app.win, editor->title);
+      // SDL_SetWindowTitle(app.win, editor->title);
       int i;
 
       for (i = 0; i < 32; ++i)

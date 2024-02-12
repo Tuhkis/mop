@@ -4,11 +4,11 @@
 #include "editor.h"
 
 Editor* create_editor(const char* title) {
+  (void) title;
   Editor* ret = malloc(sizeof(Editor));
   ret->text = malloc(BUFFSIZE);
   ret->size = BUFFSIZE;
   memset(ret->text, 0, BUFFSIZE - 1);
-  memcpy(ret->title, title, 64);
 
   return ret;
 }

@@ -12,7 +12,6 @@ typedef struct editor_t {
   char* text;
   int caret_pos;
   int size;
-  char title[64];
 } Editor;
 
 Editor* create_editor(const char* title);
