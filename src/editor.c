@@ -9,6 +9,7 @@ Editor* create_editor(const char* title) {
   ret->text = malloc(BUFFSIZE);
   ret->size = BUFFSIZE;
   memset(ret->text, 0, BUFFSIZE - 1);
+  ret->scroll = 0;
 
   return ret;
 }

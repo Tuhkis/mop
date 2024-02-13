@@ -4,6 +4,7 @@
 #include "app.h"
 #include "editor.h"
 #include "font.h"
+#include "keymap.h"
 
 #ifdef _WIN32
   #define WIN32_LEAN_AND_MEAN
@@ -13,6 +14,7 @@
 int main(int argc, char** argv) {
   App app;
   char running = 1;
+  Uint64 prev = 0;
   int i;
   SDL_DisplayMode dm;
   SDL_Event event;
@@ -56,6 +58,7 @@ int main(int argc, char** argv) {
     SDL_Quit();
     return -1;
   }
+  SDL_SetRenderDrawBlendMode(app.renderer, SDL_BLENDMODE_BLEND);
   SDL_StartTextInput();
 
   SDL_GetDisplayDPI(0, &app.scale, NULL, NULL);
@@ -68,7 +71,11 @@ int main(int argc, char** argv) {
   app.editors.first = NULL;
   app.current_editor = 0;
 
+  app.notif.notifs.first = NULL;
+  app.notif.notifs.len = 0;
+
   if (argc > 1) {
+    char notif[256];
     FILE* f;
     Editor* editor = create_editor(argv[1]);
     f = fopen(argv[1], "r");
@@ -79,14 +86,21 @@ int main(int argc, char** argv) {
     fread(editor->text, editor->size, 1, f);
     fclose(f);
     ll_list_add(&app.editors, editor);
+    sprintf(notif, "Open file: %s", argv[1]);
+    add_notif(&app.notif, create_notif(notif));
   } else {
     ll_list_add(&app.editors, create_editor("Unnamed"));
   }
 
   for (;running;) {
     Editor* editor = NULL;
+    Uint64 now = SDL_GetPerformanceCounter();
+    float delta = (now - prev) / (float) SDL_GetPerformanceFrequency();
+    if (delta > 1.0f) delta = 0.0f;
+    prev = now;
     if (app.editors.first != NULL)
       editor = (Editor*)(ll_list_get(app.editors, app.current_editor));
+    process_notifs(&app.notif, delta);
     for (;SDL_PollEvent(&event) != 0;) {
       switch (event.type) {
         case SDL_QUIT: {
@@ -94,7 +108,21 @@ int main(int argc, char** argv) {
           break;
         }
         case SDL_KEYDOWN: {
+          Keybind* binds = get_keybinds();
+          for (i = 0; i < MAX_KEYBINDS; ++i) {
+            if (binds[i].proc == NULL) break;
+            if (event.key.keysym.sym == binds[i].key) binds[i].proc(&app);
+          }
           switch (event.key.keysym.sym) {
+            case SDLK_PAGEDOWN: {
+              ++editor->scroll;
+              break;
+            }
+            case SDLK_PAGEUP: {
+              --editor->scroll;
+              if (editor->scroll < 0) editor->scroll = 0;
+              break;
+            }
             case SDLK_RIGHT: {
               ++editor->caret_pos;
               break;
@@ -142,6 +170,12 @@ int main(int argc, char** argv) {
           }
           break;
         }
+        case SDL_MOUSEWHEEL: {
+          const int s = event.wheel.y * 2 * app.scale;
+          editor->scroll -= s;
+          if (editor->scroll < 0) editor->scroll = 0;
+          break;
+        }
         case SDL_WINDOWEVENT: {
           switch (event.window.event) {
             case SDL_WINDOWEVENT_SIZE_CHANGED: /* fallthrough */
@@ -165,7 +199,6 @@ int main(int argc, char** argv) {
     editor_rect.y = app.margin_y + app.line_offset;
     editor_rect.w = app.win_width - app.margin_x * 2;
     editor_rect.h = app.win_height - (app.margin_y + app.line_offset) * 2;
-    SDL_Delay(1000 / 60);
     SDL_SetRenderDrawColor(app.renderer, 20, 20, 20, 255);
     SDL_RenderClear(app.renderer);
     SDL_SetRenderDrawColor(app.renderer, 200, 200, 200, 255);
@@ -173,11 +206,11 @@ int main(int argc, char** argv) {
     if (app.editors.first != NULL) {
       // SDL_SetWindowTitle(app.win, editor->title);
       for (i = 0; i < editor_rect.h / (app.line_offset + app.code_font->baseline) + 1; ++i)
-        editor_render_line(editor, i, app.margin_x, app.margin_y + app.code_font->baseline * (i + 1) + app.line_offset * (i + 1), app.renderer, app.code_font);
+        editor_render_line(editor, i + editor->scroll, app.margin_x, app.margin_y + app.code_font->baseline * (i + 1) + app.line_offset * (i + 1), app.renderer, app.code_font);
 
       /* Create a caret */
       caret_rect.x = editor_len_until_prev_line(editor, editor->caret_pos) * 10.4 * app.scale + app.margin_x;
-      caret_rect.y = 4 + app.margin_y + app.code_font->baseline * (editor_newlines_before(editor, editor->caret_pos) + 1) + app.line_offset * (editor_newlines_before(editor, editor->caret_pos) + 1);
+      caret_rect.y = 4 + app.margin_y + app.code_font->baseline * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll) + app.line_offset * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll);
       caret_rect.w = 3 * app.scale;
       caret_rect.h = app.code_font->baseline + 4;
       SDL_SetRenderDrawColor(app.renderer, 200, 200, 255, 200);
@@ -187,7 +220,10 @@ int main(int argc, char** argv) {
       render_text(app.renderer, app.code_font, app.margin_x, app.code_font->baseline + app.margin_y, "No open editors.");
     }
     SDL_RenderSetClipRect(app.renderer, NULL);
+    draw_notifs(&app);
     SDL_RenderPresent(app.renderer);
+    SDL_Delay(1000 / 60);
+    (void) delta;
   }
 
   for (i = 0; i < (int)(app.editors.len); ++i)

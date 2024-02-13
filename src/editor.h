@@ -11,6 +11,7 @@
 typedef struct editor_t {
   char* text;
   int caret_pos;
+  int scroll;
   int size;
 } Editor;
 
