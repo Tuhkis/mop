@@ -14,6 +14,7 @@
 int main(int argc, char** argv) {
   App app;
   char running = 1;
+  char super = 0;
   Uint64 prev = 0;
   int i;
   SDL_DisplayMode dm;
@@ -64,8 +65,8 @@ int main(int argc, char** argv) {
   SDL_GetDisplayDPI(0, &app.scale, NULL, NULL);
   app.scale /= 96.0f;
   app.code_font = open_font(app.renderer, "code.ttf", 26 * app.scale);
-  app.margin_x = 15 * app.scale;
-  app.margin_y = 5 * app.scale;
+  app.margin_x = 12 * app.scale;
+  app.margin_y = 12 * app.scale;
   app.line_offset = 6 * app.scale;
   app.editors.len = 0;
   app.editors.first = NULL;
@@ -86,8 +87,9 @@ int main(int argc, char** argv) {
     fread(editor->text, editor->size, 1, f);
     fclose(f);
     ll_list_add(&app.editors, editor);
-    sprintf(notif, "Open file: %s", argv[1]);
+    sprintf(notif, "Opened %s", argv[1]);
     add_notif(&app.notif, create_notif(notif));
+    SDL_SetWindowTitle(app.win, argv[1]);
   } else {
     ll_list_add(&app.editors, create_editor("Unnamed"));
   }
@@ -107,6 +109,11 @@ int main(int argc, char** argv) {
           running = 0;
           break;
         }
+        case SDL_KEYUP: {
+          if (event.key.keysym.sym == SDLK_LALT)
+            super = 0;
+          break;
+        }
         case SDL_KEYDOWN: {
           Keybind* binds = get_keybinds();
           for (i = 0; i < MAX_KEYBINDS; ++i) {
@@ -114,6 +121,16 @@ int main(int argc, char** argv) {
             if (event.key.keysym.sym == binds[i].key) binds[i].proc(&app);
           }
           switch (event.key.keysym.sym) {
+            case SDLK_o: {
+              if (super) {
+                add_notif(&app.notif, create_notif("Open file."));
+                break;
+              }
+            }
+            case SDLK_LALT: {
+              super = 1;
+              break;
+            }
             case SDLK_PAGEDOWN: {
               ++editor->scroll;
               break;
@@ -162,15 +179,14 @@ int main(int argc, char** argv) {
           break;
         }
         case SDL_TEXTINPUT: {
+          if (super) break;
           /* FIX: can only deal with ascii */
-          if (*event.text.text != *"ö") {
-            editor_insert_at(editor, *event.text.text, editor->caret_pos);
-            ++editor->caret_pos;
-          }
+          editor_insert_at(editor, *event.text.text, editor->caret_pos);
+          ++editor->caret_pos;
           break;
         }
         case SDL_MOUSEWHEEL: {
-          const int s = event.wheel.y * 2 * app.scale;
+          const int s = event.wheel.y;
           editor->scroll -= s;
           if (editor->scroll < 0) editor->scroll = 0;
           break;
@@ -203,7 +219,6 @@ int main(int argc, char** argv) {
     SDL_SetRenderDrawColor(app.renderer, 200, 200, 200, 255);
     SDL_RenderSetClipRect(app.renderer, &editor_rect);
     if (app.editors.first != NULL) {
-      // SDL_SetWindowTitle(app.win, editor->title);
       for (i = 0; i < editor_rect.h / (app.line_offset + app.code_font->baseline) + 1; ++i)
         editor_render_line(editor, i + editor->scroll, app.margin_x, app.margin_y + app.code_font->baseline * (i + 1) + app.line_offset * (i + 1), app.renderer, app.code_font);
 
@@ -218,11 +233,11 @@ int main(int argc, char** argv) {
       SDL_SetWindowTitle(app.win, "MOP");
       render_text(app.renderer, app.code_font, app.margin_x, app.code_font->baseline + app.margin_y, "No open editors.");
     }
+
     SDL_RenderSetClipRect(app.renderer, NULL);
     draw_notifs(&app);
     SDL_RenderPresent(app.renderer);
     SDL_Delay(1000 / 60);
-    (void) delta;
   }
 
   for (i = 0; i < (int)(app.editors.len); ++i)

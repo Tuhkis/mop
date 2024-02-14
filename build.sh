@@ -8,7 +8,7 @@ LFLAGS="-lSDL2 -lm"
 mkdir -p bin
 
 if ! $(test -f bin/external_impl.o); then
-  ${CC} -pipe -O3 -c src/external_impl.c -o bin/external_impl.o
+  ${CC} -pipe -Ofast -c src/external_impl.c -o bin/external_impl.o
 fi
 
 ${CC} ${CFLAGS} -c src/unity.c -o bin/unity.o
