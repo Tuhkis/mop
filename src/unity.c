@@ -3,5 +3,4 @@
 #include "keymap.c"
 #include "main.c"
 #include "notification.c"
-#include "render.c"
 
