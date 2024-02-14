@@ -65,8 +65,8 @@ int main(int argc, char** argv) {
   app.scale /= 96.0f;
   app.code_font = open_font(app.renderer, "code.ttf", 26 * app.scale);
   app.margin_x = 15 * app.scale;
-  app.margin_y = 10 * app.scale;
-  app.line_offset = 5 * app.scale;
+  app.margin_y = 5 * app.scale;
+  app.line_offset = 6 * app.scale;
   app.editors.len = 0;
   app.editors.first = NULL;
   app.current_editor = 0;
@@ -159,7 +159,6 @@ int main(int argc, char** argv) {
             }
           }
           if (editor->caret_pos < 0) editor->caret_pos = 0;
-          if (editor->text[editor->caret_pos + 1] == '\0') --editor->caret_pos;
           break;
         }
         case SDL_TEXTINPUT: {

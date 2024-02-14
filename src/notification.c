@@ -1,3 +1,5 @@
+#include "stb_sprintf.h"
+#include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
 
@@ -10,7 +12,7 @@ Notif* create_notif(const char* title) {
 
   ret = malloc(sizeof(Notif));
   ret->lifetime = 0;
-  memcpy(ret, title, NOTIF_MAX_CHARS);
+  stbsp_snprintf(ret->text, NOTIF_MAX_CHARS, "%s", title);
 
   return ret;
 }
@@ -24,7 +26,7 @@ void draw_notif(Notif* notif, App* app, int i) {
   int alpha = (int)((NOTIF_MAX_LIFETIME - notif->lifetime) / NOTIF_MAX_LIFETIME * 1000.0f);
   if (alpha > 255) alpha = 255;
 
-  r.w = 10.4 * app->scale * strlen(notif->text) + 7 * app->scale;
+  r.w = 10.4 * app->scale * strlen(notif->text) + 8 * app->scale;
   r.h = 32 * app->scale;
   r.x = app->win_width - r.w - app->margin_x;
   r.y = app->win_height - r.h * (i + 1) - app->margin_y - 5 * app->scale * i;
