@@ -1,3 +1,4 @@
+#include "stb_sprintf.h"
 #include "stdio.h"
 #include "string.h"
 
@@ -15,6 +16,7 @@ int main(int argc, char** argv) {
   App app;
   char running = 1;
   char super = 0;
+  char ctrl = 0;
   Uint64 prev = 0;
   int i;
   SDL_DisplayMode dm;
@@ -87,7 +89,7 @@ int main(int argc, char** argv) {
     fread(editor->text, editor->size, 1, f);
     fclose(f);
     ll_list_add(&app.editors, editor);
-    sprintf(notif, "Opened %s", argv[1]);
+    stbsp_sprintf(notif, "Opened %s", argv[1]);
     add_notif(&app.notif, create_notif(notif));
     SDL_SetWindowTitle(app.win, argv[1]);
   } else {
@@ -110,8 +112,16 @@ int main(int argc, char** argv) {
           break;
         }
         case SDL_KEYUP: {
-          if (event.key.keysym.sym == SDLK_LALT)
-            super = 0;
+          switch (event.key.keysym.sym) {
+            case SDLK_LALT: {
+              super = 0;
+              break;
+            }
+            case SDLK_LCTRL: {
+              ctrl = 0;
+              break;
+            }
+          }
           break;
         }
         case SDL_KEYDOWN: {
@@ -124,62 +134,24 @@ int main(int argc, char** argv) {
             case SDLK_o: {
               if (super) {
                 add_notif(&app.notif, create_notif("Open file."));
-                break;
               }
+              break;
             }
             case SDLK_LALT: {
               super = 1;
               break;
             }
-            case SDLK_PAGEDOWN: {
-              ++editor->scroll;
-              break;
-            }
-            case SDLK_PAGEUP: {
-              --editor->scroll;
-              if (editor->scroll < 0) editor->scroll = 0;
-              break;
-            }
-            case SDLK_RIGHT: {
-              ++editor->caret_pos;
-              break;
-            }
-            case SDLK_LEFT: {
-              --editor->caret_pos;
-              break;
-            }
-            case SDLK_UP: {
-              int q = editor_len_until_prev_line(editor, editor->caret_pos);
-              editor->caret_pos -= q;
-              editor->caret_pos -= 2;
-              editor->caret_pos -= editor_len_until_prev_line(editor, editor->caret_pos);
-              editor->caret_pos += q;
-              break;
-            }
-            case SDLK_DOWN: {
-              editor->caret_pos += editor_len_until_next_line(editor, editor->caret_pos) + editor_len_until_prev_line(editor, editor->caret_pos) + 1;
-              break;
-            }
-            case SDLK_BACKSPACE: {
-              if (editor->text[editor->caret_pos - 1] == '\0') break;
-              editor_remove_at(editor, editor->caret_pos - 1);
-              --editor->caret_pos;
-              break;
-            }
-            case SDLK_RETURN: {
-              ++editor->caret_pos;
-              editor_insert_at(editor, '\n', editor->caret_pos - 1);
-              break;
-            }
-            default: {
+            case SDLK_LCTRL: {
+              ctrl = 1;
               break;
             }
           }
-          if (editor->caret_pos < 0) editor->caret_pos = 0;
+          if (editor != NULL)
+            keydown_editor(editor, event.key.keysym.sym, ctrl);
           break;
         }
         case SDL_TEXTINPUT: {
-          if (super) break;
+          if (super || editor == NULL) break;
           /* FIX: can only deal with ascii */
           editor_insert_at(editor, *event.text.text, editor->caret_pos);
           ++editor->caret_pos;
@@ -237,7 +209,7 @@ int main(int argc, char** argv) {
     SDL_RenderSetClipRect(app.renderer, NULL);
     draw_notifs(&app);
     SDL_RenderPresent(app.renderer);
-    SDL_Delay(1000 / 60);
+    SDL_Delay(1000 / 25);
   }
 
   for (i = 0; i < (int)(app.editors.len); ++i)

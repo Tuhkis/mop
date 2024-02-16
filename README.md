@@ -19,5 +19,5 @@ Dependencies:
 
 ## License
 All code written for the editor is in the public domain.
-I did not write SDL2 or the STB libraries which are also in the public domain.
+I did not write SDL2 which is under the zlib-license or the STB libraries which are also in the public domain.
 

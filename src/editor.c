@@ -1,14 +1,17 @@
+#include "ctype.h"
+#include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
 
 #include "editor.h"
 
 Editor* create_editor(const char* title) {
-  (void) title;
+  int i;
   Editor* ret = malloc(sizeof(Editor));
+  (void) title;
   ret->text = malloc(BUFFSIZE);
   ret->size = BUFFSIZE;
-  memset(ret->text, 0, BUFFSIZE - 1);
+  for (i = 0; i < BUFFSIZE; ++i) ret->text[i] = '\0';
   ret->scroll = 0;
   ret->caret_pos = 0;
 
@@ -81,5 +84,98 @@ void editor_remove_at(Editor* editor, int pos) {
   {
     editor->text[i] = editor->text[i + 1];
   }
+}
+
+void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
+  (void) ctrl;
+  switch (key) {
+    case SDLK_PAGEDOWN: {
+      ++editor->scroll;
+      break;
+    }
+    case SDLK_PAGEUP: {
+      --editor->scroll;
+      if (editor->scroll < 0) editor->scroll = 0;
+      break;
+    }
+    case SDLK_RIGHT: {
+      if (ctrl) {
+        if (editor->text[editor->caret_pos] == '\n') {
+          ++editor->caret_pos;
+          break;
+        }
+        if (editor->text[editor->caret_pos] == ' ') {
+          while ((editor->text[editor->caret_pos] == ' ')) ++editor->caret_pos;
+          break;
+        }
+        if (!isalnum(editor->text[editor->caret_pos])) {
+          ++editor->caret_pos;
+          break;
+        }
+        while (isalnum(editor->text[editor->caret_pos]))
+          ++editor->caret_pos;
+
+        break;
+      }
+      ++editor->caret_pos;
+      break;
+    }
+    case SDLK_LEFT: {
+      if (ctrl) {
+        if (editor->text[editor->caret_pos - 1] == '\n') {
+          --editor->caret_pos;
+          break;
+        }
+        if (editor->text[editor->caret_pos - 1] == ' ') {
+          while ((editor->text[editor->caret_pos - 1] == ' ')) --editor->caret_pos;
+          break;
+        }
+        if (!isalnum(editor->text[editor->caret_pos - 1])) {
+          --editor->caret_pos;
+          break;
+        }
+        while (isalnum(editor->text[editor->caret_pos - 1]))
+          --editor->caret_pos;
+        break;
+      }
+      --editor->caret_pos;
+      break;
+    }
+    case SDLK_UP: {
+      int q = editor_len_until_prev_line(editor, editor->caret_pos);
+      editor->caret_pos -= q;
+      editor->caret_pos -= 2;
+      editor->caret_pos -= editor_len_until_prev_line(editor, editor->caret_pos);
+      editor->caret_pos += q;
+      break;
+    }
+    case SDLK_DOWN: {
+      /* false = 0, true = 1 */
+      int newlines = editor->text[editor->caret_pos] == '\n';
+      int target = editor->caret_pos + editor_len_until_next_line(editor, editor->caret_pos) + editor_len_until_prev_line(editor, editor->caret_pos) + 1;
+      while ((editor->caret_pos != target) && (newlines != 2)) {
+        if (editor->text[editor->caret_pos + 1] == '\n') {
+          ++newlines;
+        }
+        ++editor->caret_pos;
+      }
+      break;
+    }
+    case SDLK_BACKSPACE: {
+      if (editor->text[editor->caret_pos - 1] == '\0') break;
+      editor_remove_at(editor, editor->caret_pos - 1);
+      --editor->caret_pos;
+      break;
+    }
+    case SDLK_RETURN: {
+      ++editor->caret_pos;
+      editor_insert_at(editor, '\n', editor->caret_pos - 1);
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+  if (editor->caret_pos < 0) editor->caret_pos = 0;
 }
 
