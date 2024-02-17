@@ -10,6 +10,7 @@
 typedef struct app_t {
   float scale;
   Font* code_font;
+  Font* icon_font;
   int current_editor;
   int line_offset;
   int margin_x;

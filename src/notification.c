@@ -35,6 +35,8 @@ void draw_notif(Notif* notif, App* app, int i) {
   SDL_RenderFillRect(app->renderer, &r);
   SDL_SetRenderDrawColor(app->renderer, 20, 20, 20, 255);
   render_text(app->renderer, app->code_font, r.x + 4 * app->scale, r.y + 4 * app->scale + app->code_font->baseline, notif->text);
+  /* render_text(app->renderer, app->icon_font, r.x + r.w - 22 * app->scale, r.y + 7 * app->scale + app->icon_font->baseline, "c");
+  */
 }
 
 void draw_notifs(App* app) {

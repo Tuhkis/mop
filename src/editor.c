@@ -105,7 +105,7 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
           break;
         }
         if (editor->text[editor->caret_pos] == ' ') {
-          while ((editor->text[editor->caret_pos] == ' ')) ++editor->caret_pos;
+          while (editor->text[editor->caret_pos] == ' ') ++editor->caret_pos;
           break;
         }
         if (!isalnum(editor->text[editor->caret_pos])) {
@@ -127,7 +127,7 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
           break;
         }
         if (editor->text[editor->caret_pos - 1] == ' ') {
-          while ((editor->text[editor->caret_pos - 1] == ' ')) --editor->caret_pos;
+          while (editor->text[editor->caret_pos - 1] == ' ') --editor->caret_pos;
           break;
         }
         if (!isalnum(editor->text[editor->caret_pos - 1])) {

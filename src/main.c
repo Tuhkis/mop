@@ -6,6 +6,7 @@
 #include "editor.h"
 #include "font.h"
 #include "keymap.h"
+#include "render.h"
 
 #ifdef _WIN32
   #define WIN32_LEAN_AND_MEAN
@@ -67,6 +68,7 @@ int main(int argc, char** argv) {
   SDL_GetDisplayDPI(0, &app.scale, NULL, NULL);
   app.scale /= 96.0f;
   app.code_font = open_font(app.renderer, "code.ttf", 26 * app.scale);
+  /* app.icon_font = open_font(app.renderer, "icons.ttf", 20 * app.scale); */
   app.margin_x = 12 * app.scale;
   app.margin_y = 12 * app.scale;
   app.line_offset = 6 * app.scale;
