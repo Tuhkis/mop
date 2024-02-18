@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
           break;
         }
         case SDL_MOUSEWHEEL: {
-          target_scroll -= event.wheel.y * 1.5f * app.scale;
+          target_scroll -= event.wheel.y * 1 * app.scale;
           if (target_scroll < 0) target_scroll = 0;
           break;
         }
@@ -205,8 +205,8 @@ int main(int argc, char** argv) {
     if (app.editors.first != NULL) {
       editor->scroll += 20.0f * delta * (target_scroll - editor->scroll);
       /* Create a caret */
-      caret_x += 18.0f * delta * ((editor_len_until_prev_line(editor, editor->caret_pos) * 10.4 * app.scale + app.margin_x) - caret_x);
-      caret_y += 18.0f * delta * ((6 + app.margin_y + app.code_font->baseline * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll) + app.line_offset * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll)) - caret_y);
+      caret_x += 20.0f * delta * ((editor_len_until_prev_line(editor, editor->caret_pos) * 10.4 * app.scale + app.margin_x) - caret_x);
+      caret_y += 20.0f * delta * ((6 + app.margin_y + app.code_font->baseline * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll) + app.line_offset * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll)) - caret_y);
       caret_rect.x = caret_x;
       caret_rect.y = caret_y;
 
