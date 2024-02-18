@@ -15,15 +15,18 @@
 
 int main(int argc, char** argv) {
   App app;
+  char ctrl = 0;
   char running = 1;
   char super = 0;
-  char ctrl = 0;
-  Uint64 prev = 0;
+  float caret_x = 0.0f;
+  float caret_y = 0.0f;
+  double target_scroll = 0.0f;
   int i;
   SDL_DisplayMode dm;
   SDL_Event event;
   SDL_Rect caret_rect;
   SDL_Rect editor_rect;
+  Uint64 prev = 0;
 
   (void) argc;
   (void) argv;
@@ -78,6 +81,9 @@ int main(int argc, char** argv) {
 
   app.notif.notifs.first = NULL;
   app.notif.notifs.len = 0;
+
+  caret_rect.w = 3 * app.scale;
+  caret_rect.h = app.code_font->baseline + 4;
 
   if (argc > 1) {
     char notif[256];
@@ -153,16 +159,20 @@ int main(int argc, char** argv) {
           break;
         }
         case SDL_TEXTINPUT: {
-          if (super || editor == NULL) break;
+          if (super || editor == NULL || ctrl) break;
           /* FIX: can only deal with ascii */
           editor_insert_at(editor, *event.text.text, editor->caret_pos);
           ++editor->caret_pos;
+          if (*event.text.text == '(') editor_insert_at(editor, ')', editor->caret_pos);
+          if (*event.text.text == '{') editor_insert_at(editor, '}', editor->caret_pos);
+          if (*event.text.text == '"') editor_insert_at(editor, '"', editor->caret_pos);
+          if (*event.text.text == '\'') editor_insert_at(editor, '\'', editor->caret_pos);
+          if (*event.text.text == '`') editor_insert_at(editor, '`', editor->caret_pos);
           break;
         }
         case SDL_MOUSEWHEEL: {
-          const int s = event.wheel.y;
-          editor->scroll -= s;
-          if (editor->scroll < 0) editor->scroll = 0;
+          target_scroll -= event.wheel.y * 1.5f * app.scale;
+          if (target_scroll < 0) target_scroll = 0;
           break;
         }
         case SDL_WINDOWEVENT: {
@@ -193,14 +203,16 @@ int main(int argc, char** argv) {
     SDL_SetRenderDrawColor(app.renderer, 200, 200, 200, 255);
     SDL_RenderSetClipRect(app.renderer, &editor_rect);
     if (app.editors.first != NULL) {
-      for (i = 0; i < editor_rect.h / (app.line_offset + app.code_font->baseline) + 1; ++i)
-        editor_render_line(editor, i + editor->scroll, app.margin_x, app.margin_y + app.code_font->baseline * (i + 1) + app.line_offset * (i + 1), app.renderer, app.code_font);
-
+      editor->scroll += 20.0f * delta * (target_scroll - editor->scroll);
       /* Create a caret */
-      caret_rect.x = editor_len_until_prev_line(editor, editor->caret_pos) * 10.4 * app.scale + app.margin_x;
-      caret_rect.y = 4 + app.margin_y + app.code_font->baseline * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll) + app.line_offset * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll);
-      caret_rect.w = 3 * app.scale;
-      caret_rect.h = app.code_font->baseline + 4;
+      caret_x += 18.0f * delta * ((editor_len_until_prev_line(editor, editor->caret_pos) * 10.4 * app.scale + app.margin_x) - caret_x);
+      caret_y += 18.0f * delta * ((6 + app.margin_y + app.code_font->baseline * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll) + app.line_offset * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll)) - caret_y);
+      caret_rect.x = caret_x;
+      caret_rect.y = caret_y;
+
+      for (i = 0; i < editor_rect.h / (app.line_offset + app.code_font->baseline) + 2; ++i)
+        editor_render_line(editor, i + floor(editor->scroll), app.margin_x, app.margin_y + app.code_font->baseline * (i + 1) + app.line_offset * (i + 1) - (editor->scroll - floorf(editor->scroll)) * app.code_font->baseline, app.renderer, app.code_font);
+
       SDL_SetRenderDrawColor(app.renderer, 200, 200, 255, 200);
       SDL_RenderFillRect(app.renderer, &caret_rect);
     } else {
@@ -211,7 +223,7 @@ int main(int argc, char** argv) {
     SDL_RenderSetClipRect(app.renderer, NULL);
     draw_notifs(&app);
     SDL_RenderPresent(app.renderer);
-    SDL_Delay(1000 / 25);
+    SDL_Delay(1000 / 60);
   }
 
   for (i = 0; i < (int)(app.editors.len); ++i)

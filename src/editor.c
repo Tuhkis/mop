@@ -105,14 +105,14 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
           break;
         }
         if (editor->text[editor->caret_pos] == ' ') {
-          while (editor->text[editor->caret_pos] == ' ') ++editor->caret_pos;
+          for (;editor->text[editor->caret_pos] == ' ';) ++editor->caret_pos;
           break;
         }
         if (!isalnum(editor->text[editor->caret_pos])) {
           ++editor->caret_pos;
           break;
         }
-        while (isalnum(editor->text[editor->caret_pos]))
+        for (;isalnum(editor->text[editor->caret_pos]);)
           ++editor->caret_pos;
 
         break;
@@ -127,14 +127,14 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
           break;
         }
         if (editor->text[editor->caret_pos - 1] == ' ') {
-          while (editor->text[editor->caret_pos - 1] == ' ') --editor->caret_pos;
+          for (;editor->text[editor->caret_pos - 1] == ' ';) --editor->caret_pos;
           break;
         }
         if (!isalnum(editor->text[editor->caret_pos - 1])) {
           --editor->caret_pos;
           break;
         }
-        while (isalnum(editor->text[editor->caret_pos - 1]))
+        for (;isalnum(editor->text[editor->caret_pos - 1]);)
           --editor->caret_pos;
         break;
       }
@@ -142,18 +142,28 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
       break;
     }
     case SDLK_UP: {
-      int q = editor_len_until_prev_line(editor, editor->caret_pos);
-      editor->caret_pos -= q;
-      editor->caret_pos -= 2;
-      editor->caret_pos -= editor_len_until_prev_line(editor, editor->caret_pos);
-      editor->caret_pos += q;
+      int target = editor->caret_pos;
+      int newlines = 0;
+      int q = editor_len_until_prev_line(editor, target);
+      target -= q + 1;
+      target -= editor_len_until_prev_line(editor, target);
+      target += q;
+      for (;(editor->caret_pos != target) && (newlines != 2);) {
+        if (editor->text[editor->caret_pos - 1] == '\n') {
+          ++newlines;
+        }
+        --editor->caret_pos;
+      }
+      if (newlines < 1) {
+        editor->caret_pos -= editor_len_until_prev_line(editor, editor->caret_pos) + 1;
+      }
       break;
     }
     case SDLK_DOWN: {
       /* false = 0, true = 1 */
       int newlines = editor->text[editor->caret_pos] == '\n';
       int target = editor->caret_pos + editor_len_until_next_line(editor, editor->caret_pos) + editor_len_until_prev_line(editor, editor->caret_pos) + 1;
-      while ((editor->caret_pos != target) && (newlines != 2)) {
+      for (;(editor->caret_pos != target) && (newlines != 2);) {
         if (editor->text[editor->caret_pos + 1] == '\n') {
           ++newlines;
         }
@@ -163,13 +173,69 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
     }
     case SDLK_BACKSPACE: {
       if (editor->text[editor->caret_pos - 1] == '\0') break;
+      if (ctrl) {
+        if (editor->text[editor->caret_pos - 1] == '\n') {
+          editor_remove_at(editor, editor->caret_pos - 1);
+          --editor->caret_pos;
+          break;
+        }
+        if (editor->text[editor->caret_pos - 1] == ' ') {
+          for (;editor->text[editor->caret_pos - 1] == ' ';) {
+            editor_remove_at(editor, editor->caret_pos - 1);
+            --editor->caret_pos;
+          }
+          break;
+        }
+        if (!isalnum(editor->text[editor->caret_pos - 1])) {
+          editor_remove_at(editor, editor->caret_pos - 1);
+          --editor->caret_pos;
+          break;
+        }
+        for (;isalnum(editor->text[editor->caret_pos - 1]);) {
+          editor_remove_at(editor, editor->caret_pos - 1);
+          --editor->caret_pos;
+        }
+        break;
+      }
       editor_remove_at(editor, editor->caret_pos - 1);
       --editor->caret_pos;
       break;
     }
     case SDLK_RETURN: {
+      if (ctrl) {
+        editor->caret_pos += editor_len_until_next_line(editor, editor->caret_pos) + 1;
+        editor_insert_at(editor, '\n', editor->caret_pos - 1);
+        break;
+      }
       ++editor->caret_pos;
       editor_insert_at(editor, '\n', editor->caret_pos - 1);
+      break;
+    }
+    case SDLK_v: {
+      if (!ctrl) break;
+      char* clipboard_text = SDL_GetClipboardText();
+      int text_len = strlen(clipboard_text);
+      int i;
+      for (i = 0; i < text_len; ++i) {
+        ++editor->caret_pos;
+        editor_insert_at(editor, clipboard_text[i], editor->caret_pos - 1);
+      }
+      break;
+    }
+    /* Terminal controls */
+    case SDLK_a: {
+      if (!ctrl) break;
+      editor->caret_pos -= editor_len_until_prev_line(editor, editor->caret_pos);
+      break;
+    }
+    case SDLK_e: {
+      if (!ctrl) break;
+      editor->caret_pos += editor_len_until_next_line(editor, editor->caret_pos);
+      break;
+    }
+    case SDLK_d: {
+      if (!ctrl) break;
+      editor_remove_at(editor, editor->caret_pos);
       break;
     }
     default: {

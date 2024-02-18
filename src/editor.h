@@ -9,9 +9,9 @@
 #define BUFFSIZE (200 * 1024)
 
 typedef struct editor_t {
+  float scroll;
   char* text;
   int caret_pos;
-  int scroll;
   int size;
 } Editor;
 
