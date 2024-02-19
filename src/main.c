@@ -1,3 +1,4 @@
+#include "math.h"
 #include "stb_sprintf.h"
 #include "stdio.h"
 #include "string.h"
@@ -20,7 +21,6 @@ int main(int argc, char** argv) {
   char super = 0;
   float caret_x = 0.0f;
   float caret_y = 0.0f;
-  double target_scroll = 0.0f;
   int i;
   SDL_DisplayMode dm;
   SDL_Event event;
@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
           break;
         }
         case SDL_TEXTINPUT: {
-          if (super || editor == NULL || ctrl) break;
+          if (super || editor == NULL) break;
           /* FIX: can only deal with ascii */
           editor_insert_at(editor, *event.text.text, editor->caret_pos);
           ++editor->caret_pos;
@@ -171,8 +171,8 @@ int main(int argc, char** argv) {
           break;
         }
         case SDL_MOUSEWHEEL: {
-          target_scroll -= event.wheel.y * 1 * app.scale;
-          if (target_scroll < 0) target_scroll = 0;
+          editor->target_scroll -= event.wheel.y * 1 * app.scale;
+          if (editor->target_scroll < 0) editor->target_scroll = 0;
           break;
         }
         case SDL_WINDOWEVENT: {
@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
     SDL_SetRenderDrawColor(app.renderer, 200, 200, 200, 255);
     SDL_RenderSetClipRect(app.renderer, &editor_rect);
     if (app.editors.first != NULL) {
-      editor->scroll += 20.0f * delta * (target_scroll - editor->scroll);
+      editor->scroll += 20.0f * delta * (editor->target_scroll - editor->scroll);
       /* Create a caret */
       caret_x += 20.0f * delta * ((editor_len_until_prev_line(editor, editor->caret_pos) * 10.4 * app.scale + app.margin_x) - caret_x);
       caret_y += 20.0f * delta * ((6 + app.margin_y + app.code_font->baseline * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll) + app.line_offset * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll)) - caret_y);

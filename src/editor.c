@@ -13,6 +13,7 @@ Editor* create_editor(const char* title) {
   ret->size = BUFFSIZE;
   for (i = 0; i < BUFFSIZE; ++i) ret->text[i] = '\0';
   ret->scroll = 0;
+  ret->target_scroll = 0;
   ret->caret_pos = 0;
 
   return ret;
@@ -90,12 +91,12 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
   (void) ctrl;
   switch (key) {
     case SDLK_PAGEDOWN: {
-      ++editor->scroll;
+      ++editor->target_scroll;
       break;
     }
     case SDLK_PAGEUP: {
-      --editor->scroll;
-      if (editor->scroll < 0) editor->scroll = 0;
+      --editor->target_scroll;
+      if (editor->target_scroll < 0) editor->target_scroll = 0;
       break;
     }
     case SDLK_RIGHT: {
@@ -172,7 +173,7 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
       break;
     }
     case SDLK_BACKSPACE: {
-      if (editor->text[editor->caret_pos - 1] == '\0') break;
+      if (editor->text[editor->caret_pos - 1] == '\0' || editor->caret_pos < 1) break;
       if (ctrl) {
         if (editor->text[editor->caret_pos - 1] == '\n') {
           editor_remove_at(editor, editor->caret_pos - 1);

@@ -1,4 +1,4 @@
-rem MINGW build script.
+:: MINGW build script.
 @echo off
 
 set CC=gcc

@@ -10,6 +10,7 @@
 
 typedef struct editor_t {
   float scroll;
+  float target_scroll;
   char* text;
   int caret_pos;
   int size;
