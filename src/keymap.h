@@ -23,7 +23,6 @@ typedef struct keybind_t {
 } Keybind;
 
 Keybind* get_keybinds(void);
-void add_keybind(Keybind bind, App* app);
 
 #endif /* KEYMAP_H */
 
