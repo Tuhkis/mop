@@ -28,8 +28,8 @@ void draw_notif(Notif* notif, App* app, int i) {
 
   r.w = 10.4 * app->scale * strlen(notif->text) + 8 * app->scale;
   r.h = 32 * app->scale;
-  r.x = app->win_width - r.w - app->margin_x;
-  r.y = app->win_height - r.h * (i + 1) - app->margin_y - 5 * app->scale * i;
+  r.x = app->win_width - r.w - app->config.margin_x;
+  r.y = app->win_height - r.h * (i + 1) - app->config.margin_y - 5 * app->scale * i;
 
   SDL_SetRenderDrawColor(app->renderer, 200, 200, 200, alpha);
   SDL_RenderFillRect(app->renderer, &r);

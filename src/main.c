@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
   }
 
   SDL_GetCurrentDisplayMode(0, &dm);
-  app.win_width = dm.w * 0.5f;
+  app.win_width = dm.w * 0.6f;
   app.win_height = dm.h * 0.7f,
   app.win = SDL_CreateWindow((char*)"MOP",
     SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -72,9 +72,9 @@ int main(int argc, char** argv) {
   app.scale /= 96.0f;
   app.code_font = open_font(app.renderer, "code.ttf", 26 * app.scale);
   /* app.icon_font = open_font(app.renderer, "icons.ttf", 20 * app.scale); */
-  app.margin_x = 12 * app.scale;
-  app.margin_y = 12 * app.scale;
-  app.line_offset = 6 * app.scale;
+  app.config.margin_x = 10 * app.scale;
+  app.config.margin_y = 8 * app.scale;
+  app.config.line_offset = 6 * app.scale;
   app.editors.len = 0;
   app.editors.first = NULL;
   app.current_editor = 0;
@@ -89,12 +89,18 @@ int main(int argc, char** argv) {
     char notif[256];
     FILE* f;
     Editor* editor = create_editor(argv[1]);
+    int pos = 0;
     f = fopen(argv[1], "r");
     if (f == NULL) {
       fclose(f);
       return -1;
     }
-    fread(editor->text, editor->size, 1, f);
+    for (;;) {
+      char c = fgetc(f);
+      if (feof(f)) break;
+      editor_insert_at(editor, c, pos);
+      ++pos;
+    }
     fclose(f);
     ll_list_add(&app.editors, editor);
     stbsp_sprintf(notif, "Opened %s", argv[1]);
@@ -163,15 +169,18 @@ int main(int argc, char** argv) {
           /* FIX: can only deal with ascii */
           editor_insert_at(editor, *event.text.text, editor->caret_pos);
           ++editor->caret_pos;
-          if (*event.text.text == '(') editor_insert_at(editor, ')', editor->caret_pos);
-          if (*event.text.text == '{') editor_insert_at(editor, '}', editor->caret_pos);
-          if (*event.text.text == '"') editor_insert_at(editor, '"', editor->caret_pos);
-          if (*event.text.text == '\'') editor_insert_at(editor, '\'', editor->caret_pos);
-          if (*event.text.text == '`') editor_insert_at(editor, '`', editor->caret_pos);
+#define AUTOCLOSE(c, a) if (*event.text.text == (c)) editor_insert_at(editor, (a), editor->caret_pos)
+          AUTOCLOSE('(', ')');
+          AUTOCLOSE('{', '}');
+          AUTOCLOSE('\'', '\'');
+          AUTOCLOSE('"', '"');
+          AUTOCLOSE('[', ']');
+          AUTOCLOSE('`', '`');
+#undef AUTOCLOSE
           break;
         }
         case SDL_MOUSEWHEEL: {
-          editor->target_scroll -= event.wheel.y * 1 * app.scale;
+          editor->target_scroll -= event.wheel.y * 5 * app.scale;
           if (editor->target_scroll < 0) editor->target_scroll = 0;
           break;
         }
@@ -194,30 +203,57 @@ int main(int argc, char** argv) {
         }
       }
     }
-    editor_rect.x = app.margin_x;
-    editor_rect.y = app.margin_y + app.line_offset;
-    editor_rect.w = app.win_width - app.margin_x * 2;
-    editor_rect.h = app.win_height - (app.margin_y + app.line_offset) * 2;
+    editor_rect.x = app.config.margin_x;
+    editor_rect.y = app.config.margin_y + app.config.line_offset;
+    editor_rect.w = app.win_width - app.config.margin_x * 2;
+    editor_rect.h = app.win_height - (app.config.margin_y + app.config.line_offset) * 2;
     SDL_SetRenderDrawColor(app.renderer, 20, 20, 20, 255);
     SDL_RenderClear(app.renderer);
     SDL_SetRenderDrawColor(app.renderer, 200, 200, 200, 255);
     SDL_RenderSetClipRect(app.renderer, &editor_rect);
     if (app.editors.first != NULL) {
-      editor->scroll += 20.0f * delta * (editor->target_scroll - editor->scroll);
-      /* Create a caret */
-      caret_x += 20.0f * delta * ((editor_len_until_prev_line(editor, editor->caret_pos) * 10.4 * app.scale + app.margin_x) - caret_x);
-      caret_y += 20.0f * delta * ((6 + app.margin_y + app.code_font->baseline * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll) + app.line_offset * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll)) - caret_y);
+      SDL_Rect r;
+      r.x = app.config.margin_x + 60 * app.scale;
+      r.y = 0;
+      r.w = 2 * app.scale;
+      r.h = app.win_height;
+
+      editor->scroll += (1 - powf(2, - 40.0f * delta)) * (editor->target_scroll - editor->scroll);
+
+      caret_x += (1 - powf(2, - 40.0f * delta)) *
+        ((editor_len_until_prev_line(editor, editor->caret_pos) * 10.4 * app.scale + app.config.margin_x + 64 * app.scale) - caret_x);
+
+      caret_y += (1 - powf(2, - 40.0f * delta)) *
+        ((6 + app.config.margin_y + app.code_font->baseline * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll)
+        + app.config.line_offset * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll)) - caret_y);
+
       caret_rect.x = caret_x;
       caret_rect.y = caret_y;
 
-      for (i = 0; i < editor_rect.h / (app.line_offset + app.code_font->baseline) + 2; ++i)
-        editor_render_line(editor, i + floor(editor->scroll), app.margin_x, app.margin_y + app.code_font->baseline * (i + 1) + app.line_offset * (i + 1) - (editor->scroll - floorf(editor->scroll)) * app.code_font->baseline, app.renderer, app.code_font);
+      for (i = 0; i < editor_rect.h / (app.config.line_offset + app.code_font->baseline) + 2; ++i) {
+        int y = app.config.margin_y + app.code_font->baseline * (i + 1)
+          + app.config.line_offset * (i + 1) - (editor->scroll
+          - floorf(editor->scroll)) * app.code_font->baseline;
+
+        if (editor_render_line(editor, i + (int)editor->scroll,
+          app.config.margin_x + 64 * app.scale,
+          y,
+          app.renderer, app.code_font) == 1)
+        {
+          char line_text[7] = {0};
+          stbsp_snprintf(line_text, 6, "%d", i + (int)editor->scroll);
+          render_text(app.renderer, app.code_font, app.config.margin_x,
+            y,
+            line_text);
+        }
+      }
+      SDL_RenderFillRect(app.renderer, &r);
 
       SDL_SetRenderDrawColor(app.renderer, 200, 200, 255, 200);
       SDL_RenderFillRect(app.renderer, &caret_rect);
     } else {
       SDL_SetWindowTitle(app.win, "MOP");
-      render_text(app.renderer, app.code_font, app.margin_x, app.code_font->baseline + app.margin_y, "No open editors.");
+      render_text(app.renderer, app.code_font, app.config.margin_x, app.code_font->baseline + app.config.margin_y, "No open editors.");
     }
 
     SDL_RenderSetClipRect(app.renderer, NULL);

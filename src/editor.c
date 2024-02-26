@@ -6,23 +6,25 @@
 #include "editor.h"
 
 Editor* create_editor(const char* title) {
-  int i;
   Editor* ret = malloc(sizeof(Editor));
   (void) title;
   ret->text = malloc(BUFFSIZE);
   ret->size = BUFFSIZE;
-  for (i = 0; i < BUFFSIZE; ++i) ret->text[i] = '\0';
+  memset(ret->text, 0, BUFFSIZE);
+  ret->caret_pos = 0;
+  ret->lines = 1;
   ret->scroll = 0;
   ret->target_scroll = 0;
-  ret->caret_pos = 0;
 
   return ret;
 }
 
-void editor_render_line(Editor* editor, int line, int x, int y, SDL_Renderer* renderer, Font* font) {
-  size_t begin = 0;
+char editor_render_line(Editor* editor, int line, int x, int y, SDL_Renderer* renderer, Font* font) {
+  int begin = 0;
   int newlines_encountered = 0;
   int line_end = 0;
+
+  if (line > editor->lines - 1) return 0;
 
   for (;newlines_encountered < line;) {
     if (editor->text[begin] == '\n') ++newlines_encountered;
@@ -33,11 +35,12 @@ void editor_render_line(Editor* editor, int line, int x, int y, SDL_Renderer* re
     if (editor->text[line_end] == '\0') break;
     ++line_end;
   }
-  if (begin > BUFFSIZE || line_end > BUFFSIZE) return;
+  if (begin > editor->size || line_end > editor->size) return 0;
   editor->text[line_end] = '\0';
 
   render_text(renderer, font, x, y, editor->text + begin);
   editor->text[line_end] = '\n';
+  return 1;
 }
 
 int editor_newlines_before(Editor* editor, int pos) {
@@ -69,6 +72,7 @@ void editor_insert_at(Editor* editor, char c, int pos) {
   /* TODO: Fix. */
   if (pos > editor->size - 1) {
     editor->text = realloc(editor->text, editor->size + 512);
+    memset(editor->text + editor->size, 0, 512);
     editor->size += 512;
   }
   for (i = editor->size - 1; i >= pos + 1; --i) {
@@ -76,13 +80,14 @@ void editor_insert_at(Editor* editor, char c, int pos) {
   }
   editor->text[i] = c;
   editor->text[i + 1] = temp;
+  if (c == '\n') ++editor->lines;
 }
 
 void editor_remove_at(Editor* editor, int pos) {
   int i;
+  if (editor->text[pos] == '\n') --editor->lines;
   /* Copy next element value to current element */
-  for (i = pos; i < editor->size - 1; ++i)
-  {
+  for (i = pos; i < editor->size - 1; ++i) {
     editor->text[i] = editor->text[i + 1];
   }
 }

@@ -4,17 +4,15 @@
 #include "SDL2/SDL.h"
 #include "linked_list.h"
 
+#include "config.h"
 #include "font.h"
 #include "notification.h"
 
 typedef struct app_t {
+  Config config;
   float scale;
   Font* code_font;
-  Font* icon_font;
   int current_editor;
-  int line_offset;
-  int margin_x;
-  int margin_y;
   int win_height;
   int win_width;
   ll_List editors;
