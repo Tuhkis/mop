@@ -139,11 +139,11 @@ int main(int argc, char** argv) {
           break;
         }
         case SDL_KEYDOWN: {
-          Keybind* binds = get_keybinds();
+          /*Keybind* binds = get_keybinds();
           for (i = 0; i < MAX_KEYBINDS; ++i) {
             if (binds[i].proc == NULL) break;
             if (event.key.keysym.sym == binds[i].key) binds[i].proc(&app);
-          }
+          }*/
           switch (event.key.keysym.sym) {
             case SDLK_o: {
               if (super) {
