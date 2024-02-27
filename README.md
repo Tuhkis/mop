@@ -13,9 +13,7 @@ Dependencies:
  - Bash (on linux)
 
 ## Issues
- - Maybe corrupts memory (maybe)
  - Only supports ASCII characters.
- - There is a character maximum.
 
 ## License
 All code written for the editor is in the public domain.

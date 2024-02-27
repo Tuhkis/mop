@@ -72,6 +72,9 @@ Font* open_font_rw(SDL_Renderer* renderer, SDL_RWops* rw, float size) {
   font->scale = stbtt_ScaleForPixelHeight(font->info, size);
   stbtt_GetFontVMetrics(font->info, &font->ascent, 0, 0);
   font->baseline = (int) (font->ascent * font->scale);
+  font->stride =
+    (float)(font->chars['Y' - 32].x1)
+    - (float)(font->chars['Y' - 32].x0) + (float)(font->chars['Y' - 32].xoff) + 0.4f;
 
   free(buffer);
 
@@ -110,6 +113,17 @@ void render_text(SDL_Renderer* renderer, Font* font, float x, float y, const cha
       dst_rect.h = info->y1 - info->y0;
 
       SDL_RenderCopy(renderer, font->atlas, &src_rect, &dst_rect);
+      x += info->xadvance;
+    } else { /* If the letter isn't ascii, just render a little rectangle. */
+      stbtt_packedchar* info = &font->chars['x' - 32];
+      SDL_Rect dst_rect = {0};
+
+      dst_rect.x = x + info->xoff;
+      dst_rect.y = y + info->yoff;
+      dst_rect.w = info->x1 - info->x0;
+      dst_rect.h = info->y1 - info->y0;
+
+      SDL_RenderFillRect(renderer, &dst_rect);
       x += info->xadvance;
     }
   }

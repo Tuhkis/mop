@@ -70,15 +70,13 @@ int main(int argc, char** argv) {
 
   SDL_GetDisplayDPI(0, &app.scale, NULL, NULL);
   app.scale /= 96.0f;
-  app.code_font = open_font(app.renderer, "code.ttf", 26 * app.scale);
-  /* app.icon_font = open_font(app.renderer, "icons.ttf", 20 * app.scale); */
-  app.config.margin_x = 10 * app.scale;
-  app.config.margin_y = 8 * app.scale;
-  app.config.line_offset = 6 * app.scale;
+  populate_default_config(&app.config, app.scale);
+  read_config(&app.config, PROJECT_CONFIG_FILE, app.scale);
   app.editors.len = 0;
   app.editors.first = NULL;
   app.current_editor = 0;
 
+  app.code_font = open_font(app.renderer, app.config.code_font_file_name, app.config.font_size * app.scale);
   app.notif.notifs.first = NULL;
   app.notif.notifs.len = 0;
 
@@ -167,8 +165,10 @@ int main(int argc, char** argv) {
         case SDL_TEXTINPUT: {
           if (super || editor == NULL) break;
           /* FIX: can only deal with ascii */
-          editor_insert_at(editor, *event.text.text, editor->caret_pos);
-          ++editor->caret_pos;
+          for (i = 0; i < (int)strlen(event.text.text); ++i) {
+            editor_insert_at(editor, event.text.text[i], editor->caret_pos);
+            ++editor->caret_pos;
+          }
 #define AUTOCLOSE(c, a) if (*event.text.text == (c)) editor_insert_at(editor, (a), editor->caret_pos)
           AUTOCLOSE('(', ')');
           AUTOCLOSE('{', '}');
@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
       editor->scroll += (1 - powf(2, - 40.0f * delta)) * (editor->target_scroll - editor->scroll);
 
       caret_x += (1 - powf(2, - 40.0f * delta)) *
-        ((editor_len_until_prev_line(editor, editor->caret_pos) * 10.4 * app.scale + app.config.margin_x + 64 * app.scale) - caret_x);
+        ((editor_len_until_prev_line(editor, editor->caret_pos) * app.code_font->stride * app.scale + app.config.margin_x + 64 * app.scale) - caret_x);
 
       caret_y += (1 - powf(2, - 40.0f * delta)) *
         ((6 + app.config.margin_y + app.code_font->baseline * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll)

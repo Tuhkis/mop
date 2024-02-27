@@ -8,9 +8,9 @@
 Editor* create_editor(const char* title) {
   Editor* ret = malloc(sizeof(Editor));
   (void) title;
-  ret->text = malloc(BUFFSIZE);
-  ret->size = BUFFSIZE;
-  memset(ret->text, 0, BUFFSIZE);
+  ret->text = malloc(EDITOR_BUFFSIZE);
+  ret->size = EDITOR_BUFFSIZE;
+  memset(ret->text, 0, EDITOR_BUFFSIZE);
   ret->caret_pos = 0;
   ret->lines = 1;
   ret->scroll = 0;
@@ -70,10 +70,10 @@ void editor_insert_at(Editor* editor, char c, int pos) {
   int i;
   char temp = editor->text[pos];
   /* TODO: Fix. */
-  if (pos > editor->size - 1) {
-    editor->text = realloc(editor->text, editor->size + 512);
-    memset(editor->text + editor->size, 0, 512);
-    editor->size += 512;
+  if ((int)strlen(editor->text) + 1 > editor->size - 1) {
+    editor->text = realloc(editor->text, editor->size + EDITOR_BUFF_BUMP);
+    memset(editor->text + editor->size, 0, EDITOR_BUFF_BUMP);
+    editor->size += EDITOR_BUFF_BUMP;
   }
   for (i = editor->size - 1; i >= pos + 1; --i) {
     editor->text[i + 1] = editor->text[i];
@@ -105,6 +105,7 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
       break;
     }
     case SDLK_RIGHT: {
+      if (editor->text[editor->caret_pos + 1] == '\0') break;
       if (ctrl) {
         if (editor->text[editor->caret_pos] == '\n') {
           ++editor->caret_pos;
@@ -175,6 +176,7 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
         }
         ++editor->caret_pos;
       }
+      for (;editor->text[editor->caret_pos] == '\0';) --editor->caret_pos;
       break;
     }
     case SDLK_BACKSPACE: {
@@ -208,6 +210,18 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
       break;
     }
     case SDLK_RETURN: {
+      /* figure out indentation level and character. */
+      int indent_level = 0;
+      char indent_char = editor->text[editor->caret_pos - editor_len_until_prev_line(editor, editor->caret_pos - 1)];
+      if (indent_char == ' ' || indent_char == '\t') {
+        printf("indent char: %c\n", indent_char);
+        int pos = editor->caret_pos - editor_len_until_prev_line(editor, editor->caret_pos - 1);
+        for (;editor->text[pos] == indent_char;) {
+          ++indent_level;
+          ++pos;
+        }
+      }
+
       if (ctrl) {
         editor->caret_pos += editor_len_until_next_line(editor, editor->caret_pos) + 1;
         editor_insert_at(editor, '\n', editor->caret_pos - 1);
@@ -215,6 +229,11 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
       }
       ++editor->caret_pos;
       editor_insert_at(editor, '\n', editor->caret_pos - 1);
+      if (indent_char == ' ' || indent_char == '\t')
+        for (;indent_level >= 0; --indent_level) {
+          ++editor->caret_pos;
+          editor_insert_at(editor, indent_char, editor->caret_pos - 1);
+        }
       break;
     }
     case SDLK_v: {

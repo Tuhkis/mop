@@ -6,6 +6,7 @@
 typedef struct {
   float scale;
   float size;
+  float stride;
   int ascent;
   int baseline;
   int texture_size;
