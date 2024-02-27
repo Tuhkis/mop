@@ -181,7 +181,9 @@ int main(int argc, char** argv) {
         }
         case SDL_MOUSEWHEEL: {
           editor->target_scroll -= event.wheel.y * 5 * app.scale;
+          /* Prevent the user from scrolling too far. */
           if (editor->target_scroll < 0) editor->target_scroll = 0;
+          if (editor->target_scroll > editor->lines - 1) editor->target_scroll = editor->lines - 1;
           break;
         }
         case SDL_WINDOWEVENT: {

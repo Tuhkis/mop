@@ -214,7 +214,6 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
       int indent_level = 0;
       char indent_char = editor->text[editor->caret_pos - editor_len_until_prev_line(editor, editor->caret_pos - 1)];
       if (indent_char == ' ' || indent_char == '\t') {
-        printf("indent char: %c\n", indent_char);
         int pos = editor->caret_pos - editor_len_until_prev_line(editor, editor->caret_pos - 1);
         for (;editor->text[pos] == indent_char;) {
           ++indent_level;
@@ -229,6 +228,7 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
       }
       ++editor->caret_pos;
       editor_insert_at(editor, '\n', editor->caret_pos - 1);
+      /* indent if need be. */
       if (indent_char == ' ' || indent_char == '\t')
         for (;indent_level >= 0; --indent_level) {
           ++editor->caret_pos;
