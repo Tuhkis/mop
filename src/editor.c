@@ -224,10 +224,10 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
       if (ctrl) {
         editor->caret_pos += editor_len_until_next_line(editor, editor->caret_pos) + 1;
         editor_insert_at(editor, '\n', editor->caret_pos - 1);
-        break;
+      } else {
+        ++editor->caret_pos;
+        editor_insert_at(editor, '\n', editor->caret_pos - 1);
       }
-      ++editor->caret_pos;
-      editor_insert_at(editor, '\n', editor->caret_pos - 1);
       /* indent if need be. */
       if (indent_char == ' ' || indent_char == '\t')
         for (;indent_level >= 0; --indent_level) {

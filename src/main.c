@@ -181,9 +181,6 @@ int main(int argc, char** argv) {
         }
         case SDL_MOUSEWHEEL: {
           editor->target_scroll -= event.wheel.y * 5 * app.scale;
-          /* Prevent the user from scrolling too far. */
-          if (editor->target_scroll < 0) editor->target_scroll = 0;
-          if (editor->target_scroll > editor->lines - 1) editor->target_scroll = editor->lines - 1;
           break;
         }
         case SDL_WINDOWEVENT: {
@@ -205,6 +202,10 @@ int main(int argc, char** argv) {
         }
       }
     }
+    /* Prevent the user from scrolling too far. */
+    if (editor->target_scroll < 0) editor->target_scroll = 0;
+    if (editor->target_scroll > editor->lines - 1) editor->target_scroll = editor->lines - 1;
+
     editor_rect.x = app.config.margin_x;
     editor_rect.y = app.config.margin_y + app.config.line_offset;
     editor_rect.w = app.win_width - app.config.margin_x * 2;
@@ -215,7 +216,7 @@ int main(int argc, char** argv) {
     SDL_RenderSetClipRect(app.renderer, &editor_rect);
     if (app.editors.first != NULL) {
       SDL_Rect r;
-      r.x = app.config.margin_x + 60 * app.scale;
+      r.x = app.config.margin_x + app.code_font->stride * 5;
       r.y = 0;
       r.w = 2 * app.scale;
       r.h = app.win_height;
@@ -223,7 +224,7 @@ int main(int argc, char** argv) {
       editor->scroll += (1 - powf(2, - 40.0f * delta)) * (editor->target_scroll - editor->scroll);
 
       caret_x += (1 - powf(2, - 40.0f * delta)) *
-        ((editor_len_until_prev_line(editor, editor->caret_pos) * app.code_font->stride * app.scale + app.config.margin_x + 64 * app.scale) - caret_x);
+        ((editor_len_until_prev_line(editor, editor->caret_pos) * app.code_font->stride * app.scale + (app.config.margin_x + app.code_font->stride * 5 + 4 * app.scale)) - caret_x);
 
       caret_y += (1 - powf(2, - 40.0f * delta)) *
         ((6 + app.config.margin_y + app.code_font->baseline * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll)
@@ -238,7 +239,7 @@ int main(int argc, char** argv) {
           - floorf(editor->scroll)) * app.code_font->baseline;
 
         if (editor_render_line(editor, i + (int)editor->scroll,
-          app.config.margin_x + 64 * app.scale,
+          app.config.margin_x + app.code_font->stride * 5 + 5 * app.scale,
           y,
           app.renderer, app.code_font) == 1)
         {
