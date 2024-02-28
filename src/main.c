@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
           switch (event.key.keysym.sym) {
             case SDLK_o: {
               if (super) {
-                add_notif(&app.notif, create_notif("Open file."));
+                add_notif(&app.notif, create_notif("Open File."));
               }
               break;
             }
@@ -162,7 +162,15 @@ int main(int argc, char** argv) {
             case SDLK_b: {
               if (super && app.config.build_cmd[0] != '\0') {
                 system(app.config.build_cmd);
-                add_notif(&app.notif, create_notif("Build complete"));
+                add_notif(&app.notif, create_notif("Build Complete"));
+              }
+              break;
+            }
+            case SDLK_w: {
+              if (super) {
+                close_editor(editor);
+                ll_list_remove_ptr(&app.editors, editor);
+                add_notif(&app.notif, create_notif("Editor Closed"));
               }
               break;
             }
@@ -197,6 +205,7 @@ int main(int argc, char** argv) {
           break;
         }
         case SDL_MOUSEWHEEL: {
+          if (editor == NULL) break;
           editor->target_scroll -= event.wheel.y * 5 * app.scale;
           break;
         }
@@ -219,10 +228,6 @@ int main(int argc, char** argv) {
         }
       }
     }
-    /* Prevent the user from scrolling too far. */
-    if (editor->target_scroll < 0) editor->target_scroll = 0;
-    if (editor->target_scroll > editor->lines - 1) editor->target_scroll = editor->lines - 1;
-
     editor_rect.x = app.config.margin_x;
     editor_rect.y = app.config.margin_y + app.config.line_offset;
     editor_rect.w = app.win_width - app.config.margin_x * 2;
@@ -238,6 +243,9 @@ int main(int argc, char** argv) {
       r.w = 2 * app.scale + 1;
       r.h = app.win_height;
       SDL_RenderFillRect(app.renderer, &r);
+      /* Prevent the user from scrolling too far. */
+      if (editor->target_scroll < 0) editor->target_scroll = 0;
+      if (editor->target_scroll > editor->lines - 1) editor->target_scroll = editor->lines - 1;
 
       if (app.config.line_len_suggestor > 0) {
         r.x += app.code_font->stride * app.config.line_len_suggestor + 2 + r.w;
@@ -281,8 +289,13 @@ int main(int argc, char** argv) {
       SDL_SetRenderDrawColor(app.renderer, 200, 200, 255, 200);
       SDL_RenderFillRect(app.renderer, &caret_rect);
     } else {
+      char* text = "No open editors. Get to it.";
       SDL_SetWindowTitle(app.win, "MOP");
-      render_text(app.renderer, app.code_font, app.config.margin_x, app.code_font->baseline + app.config.margin_y, "No open editors.");
+      render_text(app.renderer, app.code_font,
+        app.win_width * 0.5f - ((int)strlen(text) * app.code_font->stride * 0.5f),
+        app.win_height * 0.5f + (app.code_font->baseline * 0.5f),
+        text
+      );
     }
 
     SDL_RenderSetClipRect(app.renderer, NULL);
