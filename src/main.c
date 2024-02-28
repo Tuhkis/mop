@@ -164,6 +164,7 @@ int main(int argc, char** argv) {
                 system(app.config.build_cmd);
                 add_notif(&app.notif, create_notif("Build Complete"));
               }
+              add_notif(&app.notif, create_notif("No Build Command Specified"));
               break;
             }
             case SDLK_w: {
@@ -254,7 +255,9 @@ int main(int argc, char** argv) {
         SDL_SetRenderDrawColor(app.renderer, 200, 200, 200, 255);
       }
 
-      SDL_SetWindowTitle(app.win, editor->name);
+      char title[128] = {0};
+      stbsp_snprintf(title, 128, "MOP - %s", editor->name);
+      SDL_SetWindowTitle(app.win, title);
 
       editor->scroll += (1 - powf(2, - 40.0f * delta)) * (editor->target_scroll - editor->scroll);
 
@@ -286,7 +289,7 @@ int main(int argc, char** argv) {
         }
       }
 
-      SDL_SetRenderDrawColor(app.renderer, 200, 200, 255, 200);
+      SDL_SetRenderDrawColor(app.renderer, 200, 210, 255, 180);
       SDL_RenderFillRect(app.renderer, &caret_rect);
     } else {
       char* text = "No open editors. Get to it.";
