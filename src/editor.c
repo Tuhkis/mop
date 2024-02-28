@@ -16,6 +16,7 @@ Editor* create_editor(const char* title) {
   ret->lines = 1;
   ret->scroll = 0;
   ret->target_scroll = 0;
+  ret->fp = (FILE*)NULL;
 
   return ret;
 }
@@ -91,6 +92,24 @@ void editor_remove_at(Editor* editor, int pos) {
   for (i = pos; i < editor->size - 1; ++i) {
     editor->text[i] = editor->text[i + 1];
   }
+}
+
+char editor_save(Editor* editor, NotifManager* notif) {
+  if (editor->fp == NULL) {
+    editor->fp = fopen(editor->name, "w");
+    if (editor->fp == NULL) {
+      add_notif(notif, create_notif("Failed to Save File"));
+      return 0;
+    }
+  }
+  fprintf(editor->fp, "%s", editor->text);
+  add_notif(notif, create_notif("File Saved"));
+  return 1;
+}
+
+void close_editor(Editor* editor) {
+  if (editor->fp != NULL) fclose(editor->fp);
+  free(editor->text);
 }
 
 void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {

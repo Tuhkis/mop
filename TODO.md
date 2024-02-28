@@ -6,7 +6,7 @@ important:
   - [ ] Move lines up and down
  - [ ] Finish text controls
  - [ ] File open dialog
- - [ ] File saving
+ - [x] File saving
 
 non-important:
  - [ ] plugins via dll's

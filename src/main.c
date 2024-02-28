@@ -153,6 +153,12 @@ int main(int argc, char** argv) {
               }
               break;
             }
+            case SDLK_s: {
+              if (super) {
+                editor_save(editor, &app.notif);
+              }
+              break;
+            }
             case SDLK_LALT: {
               super = 1;
               break;
@@ -279,7 +285,7 @@ int main(int argc, char** argv) {
   }
 
   for (i = 0; i < (int)(app.editors.len); ++i)
-    free(((Editor*)(ll_list_get(app.editors, i)))->text);
+    close_editor(((Editor*)(ll_list_get(app.editors, i))));
 
   ll_list_free(&app.editors);
 
