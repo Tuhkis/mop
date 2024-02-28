@@ -95,15 +95,15 @@ void editor_remove_at(Editor* editor, int pos) {
 }
 
 char editor_save(Editor* editor, NotifManager* notif) {
+  editor->fp = fopen(editor->name, "w");
   if (editor->fp == NULL) {
-    editor->fp = fopen(editor->name, "w");
-    if (editor->fp == NULL) {
       add_notif(notif, create_notif("Failed to Save File"));
       return 0;
-    }
   }
   fprintf(editor->fp, "%s", editor->text);
   add_notif(notif, create_notif("File Saved"));
+  fclose(editor->fp);
+  editor->fp = NULL;
   return 1;
 }
 

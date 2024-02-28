@@ -160,7 +160,8 @@ int main(int argc, char** argv) {
               break;
             }
             case SDLK_b: {
-              if (super && app.config.build_cmd[0] != '\0') {
+              if (!super) break;
+              if (app.config.build_cmd[0] != '\0') {
                 system(app.config.build_cmd);
                 add_notif(&app.notif, create_notif("Build Complete"));
               }
