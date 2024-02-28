@@ -83,27 +83,31 @@ int main(int argc, char** argv) {
   caret_rect.w = 3 * app.scale;
   caret_rect.h = app.code_font->baseline + 4;
 
-  if (argc > 1) {
-    char notif[256];
+  if (argc == 2) {
+    char notif[256] = {0};
     FILE* f;
     Editor* editor = create_editor(argv[1]);
     int pos = 0;
     f = fopen(argv[1], "r");
     if (f == NULL) {
       fclose(f);
+      printf("Failed to open file \"%s\"", argv[1]);
       return -1;
     }
     for (;;) {
       char c = fgetc(f);
-      if (feof(f)) break;
       editor_insert_at(editor, c, pos);
+      if (feof(f)) {
+        editor_remove_at(editor, pos - 1);
+        editor_remove_at(editor, pos - 1);
+        break;
+      }
       ++pos;
     }
     fclose(f);
     ll_list_add(&app.editors, editor);
-    stbsp_sprintf(notif, "Opened %s", argv[1]);
+    stbsp_snprintf(notif, 256, "Opened %s", argv[1]);
     add_notif(&app.notif, create_notif(notif));
-    SDL_SetWindowTitle(app.win, argv[1]);
   } else {
     ll_list_add(&app.editors, create_editor("Unnamed"));
   }
@@ -216,21 +220,31 @@ int main(int argc, char** argv) {
     SDL_RenderSetClipRect(app.renderer, &editor_rect);
     if (app.editors.first != NULL) {
       SDL_Rect r;
-      r.x = app.config.margin_x + app.code_font->stride * 5;
+      r.x = app.config.margin_x + app.code_font->stride * 5 - 2;
       r.y = 0;
-      r.w = 2 * app.scale;
+      r.w = 2 * app.scale + 1;
       r.h = app.win_height;
+      SDL_RenderFillRect(app.renderer, &r);
+
+      if (app.config.line_len_suggestor > 0) {
+        r.x += app.code_font->stride * app.config.line_len_suggestor + 2 + r.w;
+        SDL_SetRenderDrawColor(app.renderer, 200, 200, 200, 127);
+        SDL_RenderFillRect(app.renderer, &r);
+        SDL_SetRenderDrawColor(app.renderer, 200, 200, 200, 255);
+      }
+
+      SDL_SetWindowTitle(app.win, editor->name);
 
       editor->scroll += (1 - powf(2, - 40.0f * delta)) * (editor->target_scroll - editor->scroll);
 
       caret_x += (1 - powf(2, - 40.0f * delta)) *
-        ((editor_len_until_prev_line(editor, editor->caret_pos) * app.code_font->stride * app.scale + (app.config.margin_x + app.code_font->stride * 5 + 4 * app.scale)) - caret_x);
+        ((editor_len_until_prev_line(editor, editor->caret_pos) * app.code_font->stride + (app.config.margin_x + (app.code_font->stride * 5))) - caret_x);
 
       caret_y += (1 - powf(2, - 40.0f * delta)) *
         ((6 + app.config.margin_y + app.code_font->baseline * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll)
         + app.config.line_offset * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll)) - caret_y);
 
-      caret_rect.x = caret_x;
+      caret_rect.x = caret_x + 4 * app.scale;
       caret_rect.y = caret_y;
 
       for (i = 0; i < editor_rect.h / (app.config.line_offset + app.code_font->baseline) + 2; ++i) {
@@ -239,7 +253,7 @@ int main(int argc, char** argv) {
           - floorf(editor->scroll)) * app.code_font->baseline;
 
         if (editor_render_line(editor, i + (int)editor->scroll,
-          app.config.margin_x + app.code_font->stride * 5 + 5 * app.scale,
+          app.config.margin_x + (app.code_font->stride * 5) + (5 * app.scale),
           y,
           app.renderer, app.code_font) == 1)
         {
@@ -250,7 +264,6 @@ int main(int argc, char** argv) {
             line_text);
         }
       }
-      SDL_RenderFillRect(app.renderer, &r);
 
       SDL_SetRenderDrawColor(app.renderer, 200, 200, 255, 200);
       SDL_RenderFillRect(app.renderer, &caret_rect);

@@ -73,9 +73,7 @@ Font* open_font_rw(SDL_Renderer* renderer, SDL_RWops* rw, float size) {
   font->scale = stbtt_ScaleForPixelHeight(font->info, size);
   stbtt_GetFontVMetrics(font->info, &font->ascent, 0, 0);
   font->baseline = (int) (font->ascent * font->scale);
-  font->stride =
-    (float)(font->chars['Y' - 32].x1)
-    - (float)(font->chars['Y' - 32].x0) + (float)(font->chars['Y' - 32].xoff) + 0.4f;
+  font->stride = (float)(font->chars['D' - 32].xadvance);
 
   free(buffer);
 

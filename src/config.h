@@ -15,6 +15,7 @@ typedef struct {
   int margin_y;
   int line_offset;
   int font_size;
+  int line_len_suggestor;
   /* Colours */
 } Config;
 

@@ -6,8 +6,9 @@
 #include "font.h"
 
 /* Hope this isn't exceeded. */
-#define EDITOR_BUFFSIZE (1024 * 2)
-#define EDITOR_BUFF_BUMP (512)
+#define EDITOR_BUFFSIZE (4096)
+#define EDITOR_BUFF_BUMP (1024)
+#define EDITOR_NAME_MAX_LEN (128)
 
 typedef struct editor_t {
   char* text;
@@ -17,6 +18,7 @@ typedef struct editor_t {
   int line_target;
   int lines;
   int size;
+  char name[EDITOR_NAME_MAX_LEN];
 } Editor;
 
 char editor_render_line(Editor* editor, int line, int x, int y, SDL_Renderer* renderer, Font* font);

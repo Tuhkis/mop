@@ -2,7 +2,7 @@
 
 CC="clang"
 INC="-Iexternal"
-CFLAGS="-pipe -O2 -Wall -Wextra -Wpedantic -Werror -Wno-comment -Wno-unused-function -std=gnu11 ${INC}"
+CFLAGS="-pipe -Os -Wall -Wextra -Wpedantic -Werror -Wno-comment -Wno-unused-function -std=gnu11 ${INC}"
 LFLAGS="-lSDL2 -lm"
 
 mkdir -p bin
@@ -14,4 +14,5 @@ fi
 ${CC} ${CFLAGS} -c src/unity.c -o bin/unity.o
 
 ${CC} bin/*.o ${LFLAGS} -o bin/mop.bin
+strip bin/mop.bin
 

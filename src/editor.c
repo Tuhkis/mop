@@ -11,6 +11,7 @@ Editor* create_editor(const char* title) {
   ret->text = malloc(EDITOR_BUFFSIZE);
   ret->size = EDITOR_BUFFSIZE;
   memset(ret->text, 0, EDITOR_BUFFSIZE);
+  memcpy(ret->name, title, EDITOR_NAME_MAX_LEN);
   ret->caret_pos = 0;
   ret->lines = 1;
   ret->scroll = 0;
@@ -213,13 +214,17 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
       /* figure out indentation level and character. */
       int indent_level = 0;
       char indent_char = editor->text[editor->caret_pos - editor_len_until_prev_line(editor, editor->caret_pos - 1)];
-      if (indent_char == ' ' || indent_char == '\t') {
+      if (
+        (indent_char == ' ' || indent_char == '\t') &&
+        (editor_len_until_prev_line(editor, editor->caret_pos) > 1 ||
+        ctrl)
+      ) {
         int pos = editor->caret_pos - editor_len_until_prev_line(editor, editor->caret_pos - 1);
         for (;editor->text[pos] == indent_char;) {
           ++indent_level;
           ++pos;
-        }
-      }
+        } /* Set indent char to 'n' so that no accidental characters are inserted */
+      } else indent_char = 'n';
 
       if (ctrl) {
         editor->caret_pos += editor_len_until_next_line(editor, editor->caret_pos) + 1;
