@@ -1,5 +1,6 @@
 #include "config.c"
 #include "editor.c"
+#include "editor_view.c"
 #include "floatview.h"
 #include "font.c"
 #include "keymap.c"
