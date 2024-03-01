@@ -8,6 +8,7 @@
 #include "font.h"
 #include "keymap.h"
 #include "render.h"
+#include "util.h"
 
 #ifdef _WIN32
   #define WIN32_LEAN_AND_MEAN
@@ -235,7 +236,7 @@ int main(int argc, char** argv) {
             int line = 0;
             int pos_on_line = 0;
             SDL_GetMouseState(&mx, &my);
-            line = roundf(editor->scroll) + ((my - app.config.margin_y - (editor->scroll - floorf(editor->scroll))) / (app.config.line_offset + app.code_font->baseline));
+            line = roundf(editor->scroll) + (((my - app.config.margin_y - 0.25f * (app.config.line_offset + app.code_font->baseline)) - (editor->scroll - floorf(editor->scroll))) / (app.config.line_offset + app.code_font->baseline));
             pos_on_line = (mx - (app.config.margin_x + (app.code_font->stride * 5) + (5 * app.scale))) / app.code_font->stride + 1;
             editor->caret_pos = 0;
             for (;newlines < line;) {
@@ -264,10 +265,12 @@ int main(int argc, char** argv) {
     SDL_SetRenderDrawColor(app.renderer, 200, 200, 200, 255);
     SDL_RenderSetClipRect(app.renderer, &editor_rect);
     if (app.editors.first != NULL) {
+      int line_number_width = 2 * app.config.margin_x + (app.code_font->stride * (count_digits(editor->lines) + 1));
+      int text_start = line_number_width + 6 * app.scale;
       SDL_Rect r;
-      r.x = app.config.margin_x + app.code_font->stride * 5;
       r.y = 0;
       r.w = 2 * app.scale;
+      r.x = line_number_width ;
       r.h = app.win_height;
       SDL_RenderFillRect(app.renderer, &r);
       /* Prevent the user from scrolling too far. */
@@ -294,7 +297,7 @@ int main(int argc, char** argv) {
       editor->scroll += (1 - powf(2, - 40.0f * delta)) * (editor->target_scroll - editor->scroll);
 
       caret_x += (1 - powf(2, - 40.0f * delta)) *
-        ((editor_len_until_prev_line(editor, editor->caret_pos) * app.code_font->stride + (app.config.margin_x + (app.code_font->stride * 5))) - caret_x);
+        (editor_len_until_prev_line(editor, editor->caret_pos) * app.code_font->stride - caret_x);
 
       /* What in the literal fuck is this? I guess it works... */
       caret_y += (1 - powf(2, - 40.0f * delta)) *
@@ -303,7 +306,7 @@ int main(int argc, char** argv) {
         + app.config.line_offset * (editor_newlines_before(editor, editor->caret_pos)
         + 1) - caret_y);
 
-      caret_rect.x = caret_x + 4 * app.scale;
+      caret_rect.x = caret_x + text_start;
       caret_rect.y = caret_y + app.config.margin_y
         - (editor->scroll * (app.code_font->baseline + app.config.line_offset))
         + ((editor->scroll - floorf(editor->scroll)));
@@ -313,22 +316,19 @@ int main(int argc, char** argv) {
           + app.config.line_offset * (i + 1) - (editor->scroll
           - floorf(editor->scroll)) * (app.code_font->baseline + app.config.line_offset);
 
-        if (editor_render_line(editor, i + (int)editor->scroll,
-          app.config.margin_x + (app.code_font->stride * 5) + (5 * app.scale),
-          y,
+        if (editor_render_line(editor, i + (int)editor->scroll, text_start, y,
           app.renderer, app.code_font) == 1)
         {
           char line_text[8] = {0};
-          stbsp_snprintf(line_text, 6, "%d", i + (int)editor->scroll);
+          stbsp_snprintf(line_text, 6, "%d", i + (int)editor->scroll + 1);
           render_text(app.renderer, app.code_font,
-            app.config.margin_x + (app.code_font->stride * 5)
-              - (5 * app.scale) - ((int)strlen(line_text) * app.code_font->stride),
+            line_number_width - (5 * app.scale) - ((int)strlen(line_text) * app.code_font->stride) - app.config.margin_x,
             y,
             line_text);
         }
       }
 
-      SDL_SetRenderDrawColor(app.renderer, 200, 210, 255, 180);
+      SDL_SetRenderDrawColor(app.renderer, 200, 210, 255, 155);
       SDL_RenderFillRect(app.renderer, &caret_rect);
     } else {
       char* text = "No open editors. Get to it.";
@@ -357,3 +357,4 @@ int main(int argc, char** argv) {
   SDL_Quit();
   return 0;
 }
+

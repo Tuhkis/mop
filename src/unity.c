@@ -6,4 +6,5 @@
 #include "main.c"
 #include "notification.c"
 #include "render.c"
+#include "util.c"
 

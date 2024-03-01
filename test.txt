@@ -1,2 +1,12 @@
-dwakjdhwa
-Where is this text now?
+#include "stdio.h"
+
+int main(int argc, char** argv) {
+  printf("Hello World!\n");
+  for (int i = 0; i < 10; ++i)
+  {
+    printf("Hi again");
+    printf("\n");
+  }
+  return 0;
+}
+
