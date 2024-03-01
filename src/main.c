@@ -235,7 +235,7 @@ int main(int argc, char** argv) {
             int line = 0;
             int pos_on_line = 0;
             SDL_GetMouseState(&mx, &my);
-            line = roundf(editor->scroll) + ((my - app.config.margin_y + (editor->scroll - floorf(editor->scroll))) / (app.config.line_offset + app.code_font->baseline));
+            line = roundf(editor->scroll) + ((my - app.config.margin_y - (editor->scroll - floorf(editor->scroll))) / (app.config.line_offset + app.code_font->baseline));
             pos_on_line = (mx - (app.config.margin_x + (app.code_font->stride * 5) + (5 * app.scale))) / app.code_font->stride + 1;
             editor->caret_pos = 0;
             for (;newlines < line;) {
@@ -273,6 +273,9 @@ int main(int argc, char** argv) {
       /* Prevent the user from scrolling too far. */
       if (editor->target_scroll < 0) editor->target_scroll = 0;
       if (editor->target_scroll > editor->lines - 1) editor->target_scroll = editor->lines - 1;
+      /* Prevent the user from moving the cursor out of bounds */
+      if (editor->caret_pos < 0) editor->caret_pos = 0;
+      if (editor->caret_pos > (int)strlen(editor->text) - 1) editor->caret_pos = (int)strlen(editor->text) - 1;
 
       if (app.config.line_len_suggestor > 0) {
         r.x += app.code_font->stride * app.config.line_len_suggestor + 2 + r.w;
@@ -293,26 +296,33 @@ int main(int argc, char** argv) {
       caret_x += (1 - powf(2, - 40.0f * delta)) *
         ((editor_len_until_prev_line(editor, editor->caret_pos) * app.code_font->stride + (app.config.margin_x + (app.code_font->stride * 5))) - caret_x);
 
+      /* What in the literal fuck is this? I guess it works... */
       caret_y += (1 - powf(2, - 40.0f * delta)) *
-        ((6 + app.config.margin_y + app.code_font->baseline * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll)
-        + app.config.line_offset * (editor_newlines_before(editor, editor->caret_pos) + 1 - editor->scroll)) - caret_y);
+        (app.config.line_offset + app.code_font->baseline * (editor_newlines_before(editor, editor->caret_pos)
+        + 1)
+        + app.config.line_offset * (editor_newlines_before(editor, editor->caret_pos)
+        + 1) - caret_y);
 
       caret_rect.x = caret_x + 4 * app.scale;
-      caret_rect.y = caret_y;
+      caret_rect.y = caret_y + app.config.margin_y
+        - (editor->scroll * (app.code_font->baseline + app.config.line_offset))
+        + ((editor->scroll - floorf(editor->scroll)));
 
       for (i = 0; i < editor_rect.h / (app.config.line_offset + app.code_font->baseline) + 2; ++i) {
         int y = app.config.margin_y + app.code_font->baseline * (i + 1)
           + app.config.line_offset * (i + 1) - (editor->scroll
-          - floorf(editor->scroll)) * app.code_font->baseline;
+          - floorf(editor->scroll)) * (app.code_font->baseline + app.config.line_offset);
 
         if (editor_render_line(editor, i + (int)editor->scroll,
           app.config.margin_x + (app.code_font->stride * 5) + (5 * app.scale),
           y,
           app.renderer, app.code_font) == 1)
         {
-          char line_text[7] = {0};
+          char line_text[8] = {0};
           stbsp_snprintf(line_text, 6, "%d", i + (int)editor->scroll);
-          render_text(app.renderer, app.code_font, app.config.margin_x,
+          render_text(app.renderer, app.code_font,
+            app.config.margin_x + (app.code_font->stride * 5)
+              - (5 * app.scale) - ((int)strlen(line_text) * app.code_font->stride),
             y,
             line_text);
         }
@@ -347,4 +357,3 @@ int main(int argc, char** argv) {
   SDL_Quit();
   return 0;
 }
-

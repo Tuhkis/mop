@@ -71,7 +71,6 @@ int editor_len_until_next_line(Editor* editor, int pos) {
 void editor_insert_at(Editor* editor, char c, int pos) {
   int i;
   char temp = editor->text[pos];
-  /* TODO: Fix. */
   if ((int)strlen(editor->text) + 1 > editor->size - 1) {
     editor->text = realloc(editor->text, editor->size + EDITOR_BUFF_BUMP);
     memset(editor->text + editor->size, 0, EDITOR_BUFF_BUMP);
@@ -290,6 +289,5 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
       break;
     }
   }
-  if (editor->caret_pos < 0) editor->caret_pos = 0;
 }
 
