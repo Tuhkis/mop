@@ -101,7 +101,6 @@ char editor_save(Editor* editor, NotifManager* notif) {
       return 0;
   }
   fprintf(editor->fp, "%s", editor->text);
-  add_notif(notif, create_notif("File Saved"));
   fclose(editor->fp);
   editor->fp = NULL;
   return 1;

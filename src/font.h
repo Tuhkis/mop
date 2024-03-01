@@ -3,7 +3,7 @@
 
 #include "stb_truetype.h"
 
-typedef struct {
+typedef struct font {
   float scale;
   float size;
   float stride;

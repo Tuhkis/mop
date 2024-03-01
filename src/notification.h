@@ -7,12 +7,12 @@
 #define NOTIF_MAX_CHARS (256)
 #define NOTIF_MAX_LIFETIME (4.5f)
 
-typedef struct notif_t {
+typedef struct notif {
   char text[NOTIF_MAX_CHARS];
   float lifetime;
 } Notif;
 
-typedef struct notif_manager_t {
+typedef struct notif_manager {
   ll_List notifs;
 } NotifManager;
 

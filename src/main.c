@@ -108,8 +108,6 @@ int main(int argc, char** argv) {
     ll_list_add(&app.editors, editor);
     stbsp_snprintf(notif, 256, "Opened %s", argv[1]);
     add_notif(&app.notif, create_notif(notif));
-  } else {
-    ll_list_add(&app.editors, create_editor("Unnamed"));
   }
 
   for (;running;) {
@@ -155,7 +153,10 @@ int main(int argc, char** argv) {
             }
             case SDLK_s: {
               if (super) {
+                char notif[256] = {0};
+                stbsp_snprintf(notif, 256, "Saved %s", editor->name);
                 editor_save(editor, &app.notif);
+                add_notif(&app.notif, create_notif(notif));
               }
               break;
             }
@@ -170,9 +171,11 @@ int main(int argc, char** argv) {
             }
             case SDLK_w: {
               if (super) {
+                char notif[256] = {0};
+                stbsp_snprintf(notif, 256, "Closed %s", editor->name);
                 close_editor(editor);
                 ll_list_remove_ptr(&app.editors, editor);
-                add_notif(&app.notif, create_notif("Editor Closed"));
+                add_notif(&app.notif, create_notif(notif));
               }
               break;
             }
@@ -240,9 +243,9 @@ int main(int argc, char** argv) {
     SDL_RenderSetClipRect(app.renderer, &editor_rect);
     if (app.editors.first != NULL) {
       SDL_Rect r;
-      r.x = app.config.margin_x + app.code_font->stride * 5 - 2;
+      r.x = app.config.margin_x + app.code_font->stride * 5;
       r.y = 0;
-      r.w = 2 * app.scale + 1;
+      r.w = 2 * app.scale;
       r.h = app.win_height;
       SDL_RenderFillRect(app.renderer, &r);
       /* Prevent the user from scrolling too far. */
@@ -257,7 +260,10 @@ int main(int argc, char** argv) {
       }
 
       char title[128] = {0};
-      stbsp_snprintf(title, 128, "MOP - %s", editor->name);
+      if (editor->name[0] != '\0')
+        stbsp_snprintf(title, 128, "MOP - %s", editor->name);
+      else
+        stbsp_snprintf(title, 128, "MOP - Unnamed Editor");
       SDL_SetWindowTitle(app.win, title);
 
       editor->scroll += (1 - powf(2, - 40.0f * delta)) * (editor->target_scroll - editor->scroll);

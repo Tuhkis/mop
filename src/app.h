@@ -8,7 +8,7 @@
 #include "font.h"
 #include "notification.h"
 
-typedef struct app_t {
+typedef struct app {
   Config config;
   float scale;
   Font* code_font;

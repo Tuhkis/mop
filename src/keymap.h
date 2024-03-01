@@ -8,14 +8,14 @@
 #define MAX_KEYBINDS (64)
 #define KEYBIND_DESC_LEN (256)
 
-typedef enum keymod_e {
+typedef enum keymod {
   KEYMOD_NONE,
   KEYMOD_ALT,
   KEYMOD_CTRL,
   KEYMOD_CTRL_SHIFT,
 } Keymod;
 
-typedef struct keybind_t {
+typedef struct keybind {
   char* desc;
   Keymod mod;
   SDL_Keycode key;

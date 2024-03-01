@@ -4,7 +4,7 @@
 #define CONFIG_FILE ((char*)"config")
 #define PROJECT_CONFIG_FILE ((char*)".mop_config")
 
-typedef struct {
+typedef struct config {
   /* "Private fields" */
   int _keybind_index;
   /* Behaviour */
