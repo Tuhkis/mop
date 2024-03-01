@@ -228,6 +228,28 @@ int main(int argc, char** argv) {
           }
           break;
         }
+        case SDL_MOUSEBUTTONDOWN: {
+          if (event.button.button == SDL_BUTTON_LEFT && editor != NULL) {
+            int my, mx;
+            int newlines = 0;
+            int line = 0;
+            int pos_on_line = 0;
+            SDL_GetMouseState(&mx, &my);
+            line = roundf(editor->scroll) + ((my - app.config.margin_y + (editor->scroll - floorf(editor->scroll))) / (app.config.line_offset + app.code_font->baseline));
+            pos_on_line = (mx - (app.config.margin_x + (app.code_font->stride * 5) + (5 * app.scale))) / app.code_font->stride + 1;
+            editor->caret_pos = 0;
+            for (;newlines < line;) {
+              if (editor->text[editor->caret_pos] == '\n')
+                ++newlines;
+              ++editor->caret_pos;
+            }
+            if (pos_on_line < editor_len_until_next_line(editor, editor->caret_pos))
+              editor->caret_pos += pos_on_line;
+            else
+              editor->caret_pos += editor_len_until_next_line(editor, editor->caret_pos);
+          }
+          break;
+        }
         default: {
           break;
         }
