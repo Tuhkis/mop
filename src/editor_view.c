@@ -8,7 +8,7 @@ void init_editor_view(App* app, EditorView* view) {
   view->caret_x = 0;
   view->caret_y = 0;
   view->caret_rect.w = 3 * app->scale;
-  view->caret_rect.h = app->code_font->baseline + 4;
+  view->caret_rect.h = app->code_font->baseline + 7 * app->scale;
   view->editor = NULL;
   view->line_number_width = 0;
 }
@@ -24,8 +24,10 @@ void render_editor_view(EditorView* view, float delta) {
   else
     view->editor = (Editor*)(ll_list_get(view->app->editors, view->editor_index));
 
+  SDL_RenderSetClipRect(view->app->renderer, &view->area);
+
   if (view->editor != NULL) {
-    view->line_number_width += (1 - powf(2, - 22.0f * delta)) *
+    view->line_number_width += (1 - powf(2, - 40.0f * delta)) *
       (2 * view->app->config.margin_x + (view->app->code_font->stride * (count_digits(view->editor->lines) + 1)) - view->line_number_width);
     int text_start = view->line_number_width + 6 * view->app->scale;
     SDL_Rect r;
@@ -55,9 +57,9 @@ void render_editor_view(EditorView* view, float delta) {
       stbsp_snprintf(title, 128, "MOP - Unnamed Editor");
     SDL_SetWindowTitle(view->app->win, title);
 
-    view->editor->scroll += (1 - powf(2, - 40.0f * delta)) * (view->editor->target_scroll - view->editor->scroll);
+    view->editor->scroll += (1 - powf(2, - 35.0f * delta)) * (view->editor->target_scroll - view->editor->scroll);
 
-    view->caret_x += (1 - powf(2, - 55.0f * delta)) *
+    view->caret_x += (1 - powf(2, - 45.0f * delta)) *
       (editor_len_until_prev_line(view->editor, view->editor->caret_pos) * view->app->code_font->stride - view->caret_x);
 
     /* What in the literal fuck is this? I guess it works... */
@@ -72,6 +74,18 @@ void render_editor_view(EditorView* view, float delta) {
       - (view->editor->scroll * (view->app->code_font->baseline + view->app->config.line_offset))
       + ((view->editor->scroll - floorf(view->editor->scroll)));
 
+    {
+      SDL_Rect line_rect = {0};
+      line_rect.x = text_start - 1;
+      line_rect.y = view->caret_rect.y;
+      line_rect.w = view->area.w;
+      line_rect.h = view->caret_rect.h;
+
+      SDL_SetRenderDrawColor(view->app->renderer, 25, 25, 25, 255);
+      SDL_RenderFillRect(view->app->renderer, &line_rect);
+    }
+
+    SDL_SetRenderDrawColor(view->app->renderer, 200, 200, 200, 255);
     for (i = 0; i < view->area.h / (view->app->config.line_offset + view->app->code_font->baseline) + 2; ++i) {
       int y = view->app->config.margin_y + view->app->code_font->baseline * (i + 1)
         + view->app->config.line_offset * (i + 1) - (view->editor->scroll
@@ -82,10 +96,14 @@ void render_editor_view(EditorView* view, float delta) {
       {
         char line_text[8] = {0};
         stbsp_snprintf(line_text, 6, "%d", i + (int)view->editor->scroll + 1);
+        if (editor_newlines_before(view->editor, view->editor->caret_pos) + 1 == i + floorf(view->editor->scroll)) {
+          SDL_SetRenderDrawColor(view->app->renderer, 255, 255, 255, 255);
+        }
         render_text(view->app->renderer, view->app->code_font,
           view->line_number_width - (5 * view->app->scale) - ((int)strlen(line_text) * view->app->code_font->stride) - view->app->config.margin_x,
           y,
           line_text);
+        SDL_SetRenderDrawColor(view->app->renderer, 200, 200, 200, 255);
       }
     }
 

@@ -192,7 +192,6 @@ int main(int argc, char** argv) {
     SDL_SetRenderDrawColor(app.renderer, 20, 20, 20, 255);
     SDL_RenderClear(app.renderer);
     SDL_SetRenderDrawColor(app.renderer, 200, 200, 200, 255);
-    SDL_RenderSetClipRect(app.renderer, &editor_rect);
 
     set_editor_view_rect(&editor_views[0], &editor_rect);
     render_editor_view(&editor_views[0], delta);
@@ -214,3 +213,4 @@ int main(int argc, char** argv) {
   SDL_Quit();
   return 0;
 }
+

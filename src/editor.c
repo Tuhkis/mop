@@ -33,7 +33,7 @@ char editor_render_line(Editor* editor, int line, int x, int y, SDL_Renderer* re
     ++begin;
   }
   line_end = begin;
-  while (editor->text[line_end] != '\n') {
+  for (;editor->text[line_end] != '\n';) {
     if (editor->text[line_end] == '\0') break;
     ++line_end;
   }
@@ -56,14 +56,14 @@ int editor_newlines_before(Editor* editor, int pos) {
 
 int editor_len_until_prev_line(Editor* editor, int pos) {
   int c = 0;
-  while (editor->text[pos - 1 - c] != '\n' && editor->text != editor->text + (pos - c))
+  for (;editor->text[pos - 1 - c] != '\n' && editor->text != editor->text + (pos - c);)
     ++c;
   return c;
 }
 
 int editor_len_until_next_line(Editor* editor, int pos) {
   int c = 0;
-  while (editor->text[pos + c] != '\n')
+  for (;editor->text[pos + c] != '\n';)
     ++c;
   return c;
 }
@@ -167,9 +167,23 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
       break;
     }
     case SDLK_UP: {
+      int i;
       int target = editor->caret_pos;
       int newlines = 0;
       int q = editor_len_until_prev_line(editor, target);
+      /* TODO: Fix */
+      if (ctrl) {
+        int line_len = 1;
+        target -= editor_len_until_prev_line(editor, target);
+        q = target - editor_len_until_prev_line(editor, target - 1);
+        line_len += editor_len_until_next_line(editor, target);
+        for (i = 0; i < line_len; ++i) {
+          editor_insert_at(editor, editor->text[target + i],
+            q + i);
+            ++target;
+        }
+        break;
+      }
       target -= q + 1;
       target -= editor_len_until_prev_line(editor, target);
       target += q;
@@ -230,7 +244,7 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
     case SDLK_RETURN: {
       /* figure out indentation level and character. */
       int indent_level = 0;
-      char indent_char = editor->text[editor->caret_pos - editor_len_until_prev_line(editor, editor->caret_pos - 1)];
+      char indent_char = editor->text[editor->caret_pos - editor_len_until_prev_line(editor, editor->caret_pos - 1) - 1];
       if (
         (indent_char == ' ' || indent_char == '\t') &&
         (editor_len_until_prev_line(editor, editor->caret_pos) > 1 ||
