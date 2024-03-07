@@ -1,9 +1,6 @@
 # MOP code editor
 A toy project intented to some day resemble a text editor.
 
-## Keybinds
-Left control is for text controls. Left alt is for managing editors and everything else.
-
 ## building
 Hopefully just run `build.sh` or `build.bat` depending on your OS.
 <br>

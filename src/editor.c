@@ -237,6 +237,10 @@ void keydown_editor(Editor* editor, SDL_Keycode key, char ctrl) {
         }
         break;
       }
+#define X(a, b) if (editor->text[editor->caret_pos - 1] == (a) && editor->text[editor->caret_pos] == (b)) \
+                           editor_remove_at(editor, editor->caret_pos);
+      EDITOR_AUTOINSERT
+#undef X
       editor_remove_at(editor, editor->caret_pos - 1);
       --editor->caret_pos;
       break;

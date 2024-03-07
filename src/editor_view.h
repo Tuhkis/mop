@@ -8,6 +8,7 @@
 
 typedef struct editor_view {
   App* app;
+  char visible;
   Editor* editor;
   float caret_x;
   float caret_y;

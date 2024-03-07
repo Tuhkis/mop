@@ -3,6 +3,7 @@
 
 #include "font.h"
 #include "render.h"
+#include "syntax_rule.h"
 
 /*
  * Implementation from https://gist.github.com/benob/92ee64d9ffcaa5d3be95edbf4ded55f2
@@ -97,7 +98,7 @@ void render_text(SDL_Renderer* renderer, Font* font, float x, float y, const cha
     if (text[i] == '\t') { /* Draw tabs as little circles */
       stbtt_packedchar* info = &font->chars['n' - 32];
       draw_circle(renderer, x + info->xoff + (info->x1 - info->x0) * 0.4f, y + info->yoff + (info->y1 - info->y0) * 0.4f, 3);
-      x += info->xadvance * 2;
+      x += info->xadvance;
     } else if (text[i] >= 32 && text[i] < 127) {
       stbtt_packedchar* info = &font->chars[text[i] - 32];
       SDL_Rect src_rect = {0};

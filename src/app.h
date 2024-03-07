@@ -13,6 +13,8 @@ typedef struct app {
   float scale;
   Font* code_font;
   int current_editor;
+  int mouse_x;
+  int mouse_y;
   int win_height;
   int win_width;
   ll_List editors;

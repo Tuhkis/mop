@@ -11,6 +11,15 @@
 #define EDITOR_BUFF_BUMP (1024)
 #define EDITOR_NAME_MAX_LEN (128)
 
+#define EDITOR_AUTOINSERT \
+  X('(', ')') \
+  X('{', '}') \
+  X('\'', '\'') \
+  X('"', '"') \
+  X('[', ']') \
+  X('`', '`') \
+  
+
 typedef struct editor {
   char name[EDITOR_NAME_MAX_LEN];
   FILE* fp;

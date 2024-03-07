@@ -24,6 +24,7 @@ int main(int argc, char** argv) {
   char shift = 0;
   /* Hope and pray that no one needs a million editor views. */
   EditorView editor_views[MAX_EDITOR_VIEWS];
+  EditorView* current_view = &editor_views[0];
   int i;
   SDL_DisplayMode dm;
   SDL_Event event;
@@ -80,6 +81,7 @@ int main(int argc, char** argv) {
   app.notif.notifs.len = 0;
 
   init_editor_view(&app, &editor_views[0]);
+  editor_views[0].visible = 1;
 
   if (argc > 1) {
     for (i = 1; i < argc; ++i) {
@@ -146,18 +148,23 @@ int main(int argc, char** argv) {
               break;
             }
           }
-          keydown_editor_view(&editor_views[0], event.key.keysym.sym, ctrl, super, shift);
+          keydown_editor_view(current_view, event.key.keysym.sym, ctrl, super, shift);
           break;
         }
         case SDL_TEXTINPUT: {
           if (super) break;
           for (i = 0; i < (int)strlen(event.text.text); ++i) {
-            text_input_editor_view(&editor_views[0], *event.text.text);
+            text_input_editor_view(current_view, *event.text.text);
           }
           break;
         }
+        case SDL_MOUSEMOTION: {
+          app.mouse_x = event.motion.x;
+          app.mouse_y = event.motion.y;
+          break;
+        }
         case SDL_MOUSEWHEEL: {
-          scroll_editor_view(&editor_views[0], event.wheel.y * 5 * app.scale);
+          scroll_editor_view(current_view, event.wheel.y * 5 * app.scale);
           break;
         }
         case SDL_WINDOWEVENT: {
@@ -189,12 +196,12 @@ int main(int argc, char** argv) {
     editor_rect.y = app.config.margin_y + app.config.line_offset;
     editor_rect.w = app.win_width - app.config.margin_x * 2;
     editor_rect.h = app.win_height - (app.config.margin_y + app.config.line_offset) * 2;
-    SDL_SetRenderDrawColor(app.renderer, 20, 20, 20, 255);
+    SET_COLOR(app.renderer, app.config.bg_color, 255);
     SDL_RenderClear(app.renderer);
-    SDL_SetRenderDrawColor(app.renderer, 200, 200, 200, 255);
+    SET_COLOR(app.renderer, app.config.text_color, 255);
 
-    set_editor_view_rect(&editor_views[0], &editor_rect);
-    render_editor_view(&editor_views[0], delta);
+    set_editor_view_rect(current_view, &editor_rect);
+    render_editor_view(current_view, delta);
 
     SDL_RenderSetClipRect(app.renderer, NULL);
     draw_notifs(&app);

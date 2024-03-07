@@ -1,6 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include "color.h"
+
 #define CONFIG_FILE ((char*)"config")
 #define PROJECT_CONFIG_FILE ((char*)".mop_config")
 
@@ -17,6 +19,11 @@ typedef struct config {
   int font_size;
   int line_len_suggestor;
   /* Colours */
+  Color bg_color;
+  Color text_color;
+  Color bright_text_color;
+  Color line_highlight_color;
+  Color caret_color;
 } Config;
 
 void populate_default_config(Config* config, float scale);

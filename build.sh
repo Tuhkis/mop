@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CC="clang"
-INC="-Iexternal"
+INC="-Iexternal -Isrc"
 CFLAGS="-pipe -Os -Wall -Wextra -Wpedantic -Werror -Wno-comment -Wno-unused-function -std=gnu11 ${INC}"
 LFLAGS="-lSDL2 -lm"
 
