@@ -76,6 +76,8 @@ int main(int argc, char** argv) {
   app.editors.first = NULL;
   app.current_editor = 0;
 
+  app.time = 0;
+
   app.code_font = open_font(app.renderer, app.config.code_font_file_name, app.config.font_size * app.scale);
   app.notif.notifs.first = NULL;
   app.notif.notifs.len = 0;
@@ -117,6 +119,7 @@ int main(int argc, char** argv) {
     float delta = (now - prev) / (float) SDL_GetPerformanceFrequency();
     if (delta > 1.0f) delta = 0.0f;
     prev = now;
+    app.time += delta;
     process_notifs(&app.notif, delta);
     for (;SDL_PollEvent(&event) != 0;) {
       switch (event.type) {

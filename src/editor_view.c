@@ -114,7 +114,7 @@ void render_editor_view(EditorView* view, float delta) {
       }
     }
 
-    SET_COLOR(view->app->renderer, view->app->config.caret_color, 155);
+    SET_COLOR(view->app->renderer, view->app->config.caret_color, fabsf(sinf(view->app->time * 1.5f)) * 66.f + 155.f);
     SDL_RenderFillRect(view->app->renderer, &view->caret_rect);
   } else {
     char* text = "No open editors. Get to it.";

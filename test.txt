@@ -1,11 +1,14 @@
-#include "stdio.h"
+import pygame as pg
 
-int main(int argc, char** argv) {
-  printf("Hello world!\n");
-  for (int i = 0; i < 10; ++i) {
-    printf("Hi again!");
-    printf("\n");
-  }
-  return 0;
-}
+win = pg.display.set_mode((1024, 720))
+run = True
+
+while run:
+  pg.time.delay(1000 / 60)
+  for e in pg.event.get():
+    if e.type == pg.QUIT;
+      run = False
+      break
+  win.fill((0, 0, 0))
+  pg.display.flip()
 

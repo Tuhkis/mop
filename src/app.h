@@ -11,6 +11,7 @@
 typedef struct app {
   Config config;
   float scale;
+  float time;
   Font* code_font;
   int current_editor;
   int mouse_x;
