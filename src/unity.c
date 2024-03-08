@@ -7,6 +7,7 @@
 #include "main.c"
 #include "notification.c"
 #include "render.c"
+#include "syntax_rule.c"
 #include "util.c"
 
 /* Syntaxes */

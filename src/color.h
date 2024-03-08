@@ -1,6 +1,7 @@
 #ifndef COLOR_H
 #define COLOR_H
 
+#include "math.h"
 #include "SDL2/SDL.h"
 
 #define SET_COLOR(renderer, color, alpha) \

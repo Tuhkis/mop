@@ -8,5 +8,9 @@ typedef struct syntax_rule {
   Color color;
 } SyntaxRule;
 
+static SyntaxRule c_syntax[64];
+
+void register_syntax(void);
+
 #endif /* SYNTAX_RULE_H */
 
