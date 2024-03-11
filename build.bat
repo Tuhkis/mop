@@ -8,7 +8,7 @@ set LFLAGS=-lmingw32 -lm -lSDL2main -lSDL2 -Lexternal\winlib\SDL2-2.0.10\x86_64-
 
 if not exist bin call mkdir bin
 
-call %CC% -pipe -O3 -c src\external_impl.c -o bin\external_impl.o
+if not exist bin\external_impl.o call %CC% -pipe -O3 -c src\external_impl.c -o bin\external_impl.o
 call %CC% %CFLAGS% -c src\unity.c -o bin\unity.o
 
 call %CC% bin\*.o %LFLAGS% -o bin\mop.exe
