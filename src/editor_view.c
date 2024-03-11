@@ -138,7 +138,7 @@ void keydown_editor_view(EditorView* view, SDL_Keycode key, char ctrl, char supe
       break;
     }
     case SDLK_s: {
-      if (ctrl) {
+      if (ctrl && view->editor != NULL) {
         char notif[256] = {0};
         stbsp_snprintf(notif, 256, "Saved %s", view->editor->name);
         editor_save(view->editor, &view->app->notif);
@@ -156,7 +156,7 @@ void keydown_editor_view(EditorView* view, SDL_Keycode key, char ctrl, char supe
       break;
     }
     case SDLK_w: {
-      if (ctrl) {
+      if (ctrl && view->editor != NULL) {
         char notif[256] = {0};
         stbsp_snprintf(notif, 256, "Closed %s", view->editor->name);
         close_editor(view->editor);
