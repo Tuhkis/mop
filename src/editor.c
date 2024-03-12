@@ -16,7 +16,6 @@ Editor* create_editor(const char* title) {
   ret->lines = 1;
   ret->scroll = 0;
   ret->target_scroll = 0;
-  ret->fp = (FILE*)NULL;
 
   return ret;
 }
@@ -94,19 +93,18 @@ void editor_remove_at(Editor* editor, int pos) {
 }
 
 char editor_save(Editor* editor, NotifManager* notif) {
-  editor->fp = fopen(editor->name, "w");
-  if (editor->fp == NULL) {
+  FILE* fp = fopen(editor->name, "w");
+  if (fp == NULL) {
       add_notif(notif, create_notif("Failed to Save File"));
       return 0;
   }
-  fprintf(editor->fp, "%s", editor->text);
-  fclose(editor->fp);
-  editor->fp = NULL;
+  fprintf(fp, "%s", editor->text);
+  fclose(fp);
+  fp = NULL;
   return 1;
 }
 
 void close_editor(Editor* editor) {
-  if (editor->fp != NULL) fclose(editor->fp);
   free(editor->text);
 }
 

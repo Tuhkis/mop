@@ -15,6 +15,7 @@ void init_editor_view(App* app, EditorView* view) {
 }
 
 void set_editor_view_rect(EditorView* view, SDL_Rect* r) {
+  if (view == NULL) return;
   view->area = *r;
 }
 
@@ -129,7 +130,7 @@ void render_editor_view(EditorView* view, float delta) {
 
 void keydown_editor_view(EditorView* view, SDL_Keycode key, char ctrl, char super, char shift) {
   (void)shift;
-  if (!view->visible) return;
+  if (!view->visible || view == NULL) return;
   switch (key) {
     case SDLK_o: {
       if (ctrl) {
@@ -193,7 +194,8 @@ void mouse_button_down_editor_view(EditorView* view) {
   int newlines = 0;
   int line = 0;
   int pos_on_line = 0;
-  if (view->editor == NULL) return;
+  if (view == NULL) return;
+  if (view->editor == NULL && !view->visible) return;
   line = roundf(view->editor->scroll)
     + (((view->app->mouse_y - view->app->config.margin_y - 0.25f * (view->app->config.line_offset
     + view->app->code_font->baseline))
@@ -215,7 +217,8 @@ void mouse_button_down_editor_view(EditorView* view) {
 }
 
 void text_input_editor_view(EditorView* view, char ch) {
-  if (view->editor == NULL) return;
+  if (view == NULL) return;
+  if (view->editor == NULL || !view->visible) return;
   editor_insert_at(view->editor, ch, view->editor->caret_pos);
   ++view->editor->caret_pos;
 #define X(c, a) if (ch == (c)) editor_insert_at(view->editor, (a), view->editor->caret_pos);
@@ -224,7 +227,8 @@ void text_input_editor_view(EditorView* view, char ch) {
 }
 
 void scroll_editor_view(EditorView* view, float scroll) {
-  if (view->editor == NULL) return;
+  if (view == NULL) return;
+  if (view->editor == NULL || !view->visible) return;
   view->editor->target_scroll -= scroll;
 }
 

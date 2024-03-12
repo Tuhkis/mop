@@ -17,12 +17,15 @@
   X('\'', '\'') \
   X('"', '"') \
   X('[', ']') \
-  X('`', '`') \
-  
+  X('`', '`')
+
+typedef struct caret {
+  int pos0;
+  int pos1;
+} Caret;
 
 typedef struct editor {
   char name[EDITOR_NAME_MAX_LEN];
-  FILE* fp;
   float scroll;
   float target_scroll;
   int caret_pos;

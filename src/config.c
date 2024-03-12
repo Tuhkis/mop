@@ -4,7 +4,7 @@
 #include "config.h"
 
 void populate_default_config(Config* config, float scale) {
-  config->font_size = 26 * scale;
+  config->font_size = 28 * scale;
   config->margin_x = 6 * scale;
   config->margin_y = 8 * scale;
   config->line_offset = 6 * scale;

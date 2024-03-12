@@ -82,7 +82,8 @@ int main(int argc, char** argv) {
   app.notif.notifs.first = NULL;
   app.notif.notifs.len = 0;
 
-  init_editor_view(&app, &editor_views[0]);
+  for (i = 0; i < MAX_EDITOR_VIEWS; ++i)
+    init_editor_view(&app, &editor_views[i]);
   editor_views[0].visible = 1;
 
   if (argc > 1) {
@@ -164,6 +165,18 @@ int main(int argc, char** argv) {
         case SDL_MOUSEMOTION: {
           app.mouse_x = event.motion.x;
           app.mouse_y = event.motion.y;
+          current_view = NULL;
+          for (i = 0; i < MAX_EDITOR_VIEWS; ++i) {
+            if ((event.motion.x > editor_views[i].area.x) &&
+                (event.motion.x < editor_views[i].area.x + editor_views[i].area.w) &&
+                (event.motion.y > editor_views[i].area.y) &&
+                (event.motion.y < editor_views[i].area.y + editor_views[i].area.h) &&
+                editor_views[i].visible
+            ) {
+              current_view = &editor_views[i];
+              break;
+            }
+          }
           break;
         }
         case SDL_MOUSEWHEEL: {
@@ -186,7 +199,7 @@ int main(int argc, char** argv) {
         }
         case SDL_MOUSEBUTTONDOWN: {
           if (event.button.button == SDL_BUTTON_LEFT) {
-            mouse_button_down_editor_view(&editor_views[0]);
+            mouse_button_down_editor_view(current_view);
           }
           break;
         }
@@ -204,12 +217,16 @@ int main(int argc, char** argv) {
     SET_COLOR(app.renderer, app.config.text_color, 255);
 
     set_editor_view_rect(current_view, &editor_rect);
-    render_editor_view(current_view, delta);
+    for (i = 0; i < MAX_EDITOR_VIEWS; ++i)
+      if (editor_views[i].visible) {
+        render_editor_view(&editor_views[i], delta);
+      }
 
     SDL_RenderSetClipRect(app.renderer, NULL);
     draw_notifs(&app);
     SDL_RenderPresent(app.renderer);
-    SDL_Delay(1000 / 60);
+    /* Run at 60 fps. 0.01667 = 1 / 60 */
+    SDL_Delay(1000 * 0.01667f);
   }
 
   for (i = 0; i < (int)(app.editors.len); ++i)
